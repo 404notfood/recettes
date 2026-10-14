@@ -59,11 +59,11 @@ class RecipeController extends Controller
 
     public function show(Request $request, Recipe $recipe): Response
     {
-        abort_unless($recipe->status === 'published', 404);
+        abort_unless($recipe->status === 'published' || ($recipe->is_ai_generated && $request->user() && ($request->user()->id === $recipe->user_id || $request->user()->is_admin)), 404);
         $recipe->load('category')->loadAvg('reviews', 'rating')->loadCount('reviews');
 
         return Inertia::render('recipes/show', [
-            'recipe' => $recipe->publicData(true),
+            'recipe' => $recipe->publicData(true) + ['private_preview' => $recipe->status !== 'published'],
             'isFavorite' => $request->user() ? $recipe->favoritedBy()->where('users.id', $request->user()->id)->exists() : false,
             'canReply' => $request->user() && ($request->user()->is_admin || $recipe->user_id === $request->user()->id),
             'reviews' => $recipe->reviews()->with('user')->latest()->limit(50)->get()->map(fn (Review $review) => ['id' => $review->id, 'user_id' => $review->user_id, 'author' => $review->user->name, 'content' => $review->content, 'rating' => $review->rating, 'reply' => $review->reply, 'date' => $review->created_at->format('d/m/Y')]),

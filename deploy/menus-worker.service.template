@@ -1,0 +1,22 @@
+# Cuistot Club dedicated menu generation worker
+[Unit]
+Description=Cuistot Club - Menus (__PROJECT__)
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=__PROJECT__
+Group=__PROJECT__
+WorkingDirectory=/home/__PROJECT__/app
+ExecStart=__PHP__ /home/__PROJECT__/app/artisan queue:work menus --queue=menus --tries=1 --timeout=3600 --sleep=3
+Restart=always
+RestartSec=5
+TimeoutStopSec=3620
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+
+[Install]
+WantedBy=multi-user.target

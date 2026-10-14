@@ -239,8 +239,16 @@ export default function RecipeShow({
                 image={recipe.image_url}
                 path={`/recettes/${recipe.slug}`}
                 schema={schema}
+                privatePreview={recipe.private_preview}
             />
             <article className="site-container recipe-detail">
+                {recipe.private_preview && (
+                    <p className="menu-notice">
+                        Cette recette a été créée pour vos menus. Elle est
+                        disponible dans votre compte et attend une validation
+                        avant publication.
+                    </p>
+                )}
                 <nav className="breadcrumbs-food" aria-label="Fil d’Ariane">
                     <Link href="/">Cuistot Club</Link>
                     <span>/</span>

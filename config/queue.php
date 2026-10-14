@@ -30,6 +30,10 @@ return [
     */
 
     'connections' => [
+        'menus' => [
+            'driver' => 'database', 'connection' => env('DB_QUEUE_CONNECTION'),
+            'table' => 'jobs', 'queue' => 'menus', 'retry_after' => 3700, 'after_commit' => true,
+        ],
 
         'sync' => [
             'driver' => 'sync',

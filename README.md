@@ -1,5 +1,7 @@
 # Cuistot Club
 
+Le projet de référence est **idee**. Les dossiers voisins `cuisine` et `recettu` sont des sources de comparaison ; les fonctionnalités retenues sont intégrées ici, dans les modèles, les routes et la charte Cuistot Club.
+
 Site de recettes en français, construit sur le starter officiel Laravel 13 / React 19 / Inertia 3 / TypeScript, avec PostgreSQL, Tailwind, shadcn/ui et Magic UI (Blur Fade et Marquee).
 
 ## Version locale
@@ -30,6 +32,8 @@ Le script `scripts/Start-Local.ps1` lance le rendu SSR en arrière-plan sur la m
 La collection est conservée dans `database/seeders/data/recipe-collection.json` : entrées, plats, cuisine végétale, mijotés, desserts, potages, recettes japonaises, salades, brunch, pains et pâtes de base. `php artisan db:seed --class=RecipeCollectionSeeder` permet de l’ajouter seule. Une nouvelle exécution ne crée pas de doublons et conserve les recettes déjà modifiées ou archivées. Les 102 couvertures sont de vraies photographies, servies localement en WebP. Leurs crédits sont conservés dans `resources/data/recipe-photo-credits.json` et affichés sous la photo de chaque fiche ; ils ne s’affichent plus si cette photo est remplacée. Les temps de préparation incluent les repos et levées indiqués dans les fiches. Les pâtes crues précisent que la cuisson se poursuit dans la recette qui les utilise.
 
 ## Fonctionnement
+
+Les membres vérifiés peuvent composer leurs menus dans **Les menus** (`/menus`) : 1, 7 ou 14 jours, midi et soir, nombre de personnes, difficulté et créneaux rapides. Chaque recette mène à sa fiche ; une copie privée reste accessible depuis le planning si l'original est archivé. Les exports PDF conservent une page paysage par semaine et regroupent les courses par catégories. **Imprimer des recettes** permet de choisir les fiches, d'adapter les quantités au foyer et d'imprimer ou télécharger les étapes sans photographie. Le fonctionnement hybride et le worker sont décrits dans [docs/MENUS.md](docs/MENUS.md).
 
 Les visiteurs consultent toutes les recettes publiées, recherchent par titre, description ou ingrédient et filtrent par catégorie, temps total, difficulté ou tag. Ils peuvent proposer une recette en indiquant un nom et un e-mail privé. Toute proposition anonyme arrive en modération.
 

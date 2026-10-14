@@ -19,6 +19,7 @@ void createInertiaApp({
                 name === 'about' ||
                 name === 'privacy' ||
                 name.startsWith('recipes/') ||
+                name.startsWith('menus/') ||
                 name.startsWith('admin/'):
                 return FoodLayout;
             case name.startsWith('auth/'):

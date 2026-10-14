@@ -1,4 +1,5 @@
 @import 'tailwindcss';
+@import './menus.css';
 
 @import 'tw-animate-css';
 @import './food.css';

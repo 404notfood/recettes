@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\CommunityController;
+use App\Http\Controllers\MealPlanController;
 use App\Http\Controllers\RecipeController;
 use App\Http\Controllers\SeoController;
 use Illuminate\Support\Facades\Route;
@@ -16,6 +17,15 @@ Route::inertia('/a-propos', 'about')->name('about');
 Route::inertia('/confidentialite', 'privacy')->name('privacy');
 
 Route::middleware(['auth', 'verified'])->group(function () {
+    Route::get('/menus', [MealPlanController::class, 'index'])->name('menus.index');
+    Route::post('/menus', [MealPlanController::class, 'store'])->middleware('throttle:5,1')->name('menus.store');
+    Route::get('/menus/{mealPlan}', [MealPlanController::class, 'show'])->name('menus.show');
+    Route::get('/menus/{mealPlan}/pdf', [MealPlanController::class, 'export'])->middleware('throttle:15,1')->name('menus.pdf');
+    Route::get('/menus/{mealPlan}/imprimer', [MealPlanController::class, 'printRecipes'])->middleware('throttle:15,1')->name('menus.print');
+    Route::get('/menus/{mealPlan}/recettes/{meal}/{course}', [MealPlanController::class, 'recipe'])->name('menus.recipe');
+    Route::post('/menus/{mealPlan}/regenerate', [MealPlanController::class, 'regenerate'])->middleware('throttle:5,1')->name('menus.regenerate');
+    Route::post('/menus/{mealPlan}/meals/{meal}/replace', [MealPlanController::class, 'replace'])->middleware('throttle:5,1')->name('menus.replace');
+    Route::patch('/menus/{mealPlan}/meals/{meal}/lock', [MealPlanController::class, 'lock'])->name('menus.lock');
     Route::get('/dashboard', [CommunityController::class, 'dashboard'])->name('dashboard');
     Route::get('/mes-favoris', [CommunityController::class, 'favorites'])->name('favorites');
     Route::get('/mes-recettes/{recipe}/modifier', [RecipeController::class, 'edit'])->name('recipes.edit');

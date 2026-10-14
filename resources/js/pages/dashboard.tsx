@@ -57,6 +57,7 @@ export default function Dashboard({
                         Mes recettes
                     </Link>
                     <Link href="/mes-favoris">Mes favoris</Link>
+                    <Link href="/menus">Mes menus</Link>
                     <Link href="/settings/profile">Mon compte</Link>
                     {Boolean(user.is_admin) && (
                         <Link href="/administration">Administration</Link>

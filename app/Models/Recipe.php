@@ -27,6 +27,15 @@ use Illuminate\Support\Carbon;
  * @property array<int, array{quantity: float|null, unit: string, name: string}> $ingredients
  * @property array<int, string> $steps
  * @property array<int, string>|null $tags
+ * @property string|null $course_type
+ * @property int|null $total_minutes
+ * @property bool|null $vegetarian
+ * @property string|null $main_ingredient
+ * @property array<int,string>|null $food_groups
+ * @property string|null $protein_source
+ * @property string|null $dessert_profile
+ * @property bool $is_ai_generated
+ * @property bool $planning_estimated
  * @property array<string, mixed>|null $proposed_changes
  * @property string|null $moderation_note
  * @property Carbon|null $published_at
@@ -38,13 +47,22 @@ class Recipe extends Model
 {
     use SoftDeletes;
 
+    protected static function booted(): void
+    {
+        static::updating(function (Recipe $recipe) {
+            if ($recipe->isDirty(['ingredients', 'steps', 'servings', 'prep_time', 'cook_time', 'tags', 'category_id'])) {
+                $recipe->forceFill(['course_type' => null, 'total_minutes' => null, 'vegetarian' => null, 'main_ingredient' => null, 'food_groups' => null, 'protein_source' => null, 'dessert_profile' => null]);
+            }
+        });
+    }
+
     protected $fillable = ['user_id', 'category_id', 'title', 'slug', 'description', 'author_name', 'guest_email', 'image', 'prep_time', 'cook_time', 'servings', 'difficulty', 'ingredients', 'steps', 'tags', 'status', 'featured', 'published_at', 'proposed_changes', 'moderation_note'];
 
     protected $hidden = ['guest_email', 'proposed_changes', 'moderation_note'];
 
     protected function casts(): array
     {
-        return ['ingredients' => 'array', 'steps' => 'array', 'tags' => 'array', 'proposed_changes' => 'array', 'featured' => 'boolean', 'prep_time' => 'integer', 'cook_time' => 'integer', 'servings' => 'integer', 'published_at' => 'datetime'];
+        return ['ingredients' => 'array', 'steps' => 'array', 'tags' => 'array', 'proposed_changes' => 'array', 'featured' => 'boolean', 'prep_time' => 'integer', 'cook_time' => 'integer', 'servings' => 'integer', 'published_at' => 'datetime', 'food_groups' => 'array', 'vegetarian' => 'boolean', 'is_ai_generated' => 'boolean', 'planning_estimated' => 'boolean', 'total_minutes' => 'integer'];
     }
 
     /** @return BelongsTo<Category, $this> */

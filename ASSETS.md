@@ -27,3 +27,7 @@ Les fiches de la collection sont rédigées pour Cuistot Club. Quelques points c
 - Polices DM Sans et DM Serif Display : obtenues via Bunny Fonts pendant la compilation, puis servies localement.
 
 Les animations sont désactivées quand le visiteur demande des mouvements réduits. Les recettes restent lisibles sans JavaScript lorsque le SSR est actif.
+
+# Police des menus et impressions
+
+DM Serif Display est utilisée pour conserver la charte Cuistot Club dans les PDF. Sa version TTF et sa licence SIL Open Font License sont fournies dans `public/fonts/menu`, depuis le [dépôt officiel Google Fonts](https://github.com/google/fonts/tree/main/ofl/dmserifdisplay).

@@ -43,6 +43,7 @@ export type Recipe = {
     has_revision?: boolean;
     moderation_note?: string | null;
     guest_email?: string | null;
+    private_preview?: boolean;
 };
 export type Pagination<T> = {
     data: T[];

@@ -6,12 +6,14 @@ export function Seo({
     image = '/images/salad.webp',
     path = '/',
     schema,
+    privatePreview = false,
 }: {
     title: string;
     description?: string;
     image?: string;
     path?: string;
     schema?: Record<string, unknown>;
+    privatePreview?: boolean;
 }) {
     const siteUrl = String(
         usePage().props.siteUrl || 'https://idee.test',
@@ -20,6 +22,13 @@ export function Seo({
     const imageUrl = image.startsWith('http') ? image : siteUrl + image;
     return (
         <Head title={title}>
+            {privatePreview && (
+                <meta
+                    name="robots"
+                    content="noindex,nofollow"
+                    head-key="robots"
+                />
+            )}
             <meta
                 name="description"
                 content={description}

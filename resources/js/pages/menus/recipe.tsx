@@ -1,0 +1,53 @@
+import { Head, Link } from '@inertiajs/react';
+import { ArrowLeft } from 'lucide-react';
+import { type MenuRecipe } from '@/types/menus';
+
+export default function SavedRecipe({
+    plan,
+    recipe,
+}: {
+    plan: { id: number; title: string; people: number };
+    recipe: MenuRecipe;
+}) {
+    return (
+        <article className="site-container menu-page menu-saved-recipe">
+            <Head title={recipe.title}>
+                <meta name="robots" content="noindex,nofollow" />
+            </Head>
+            <Link className="menu-back" href={`/menus/${plan.id}`}>
+                <ArrowLeft size={15} /> Retour à mon menu
+            </Link>
+            <div className="menu-heading">
+                <div>
+                    <span className="menu-eyebrow">
+                        LA FICHE CONSERVÉE DANS VOTRE MENU
+                    </span>
+                    <h1>{recipe.title}</h1>
+                    <p>
+                        Pour {plan.people} personnes · {recipe.total_minutes}{' '}
+                        min
+                    </p>
+                </div>
+            </div>
+            <h2>Dans le panier</h2>
+            <ul className="menu-saved-ingredients">
+                {recipe.ingredients.map((item, index) => (
+                    <li key={index}>
+                        <span>{item.name}</span>
+                        <strong>
+                            {item.quantity !== null
+                                ? `${Number(((Number(item.quantity) * plan.people) / recipe.servings).toFixed(2)).toLocaleString('fr-FR')} ${item.unit}`
+                                : 'Quantité à vérifier'}
+                        </strong>
+                    </li>
+                ))}
+            </ul>
+            <h2>À vous de jouer</h2>
+            <ol className="menu-saved-steps">
+                {(recipe.steps || [recipe.description]).map((step, index) => (
+                    <li key={index}>{step}</li>
+                ))}
+            </ol>
+        </article>
+    );
+}

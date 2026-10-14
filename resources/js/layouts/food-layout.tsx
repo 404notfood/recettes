@@ -10,6 +10,7 @@ import {
     Settings,
     Shield,
     ArrowRight,
+    CalendarDays,
 } from 'lucide-react';
 import { useEffect, useState, type ReactNode } from 'react';
 import { toast } from 'sonner';
@@ -66,6 +67,12 @@ export default function FoodLayout({ children }: { children: ReactNode }) {
                             De saison <span className="nav-dot" />
                         </Link>
                         <Link href="/a-propos">L’esprit Cuistot Club</Link>
+                        <Link
+                            href="/menus"
+                            className={url.startsWith('/menus') ? 'active' : ''}
+                        >
+                            Les menus
+                        </Link>
                     </nav>
                     <div className="header-actions">
                         {user ? (
@@ -88,6 +95,11 @@ export default function FoodLayout({ children }: { children: ReactNode }) {
                                         <Link href="/dashboard">
                                             <ChefHat />
                                             Mes recettes
+                                        </Link>
+                                    </DropdownMenuItem>
+                                    <DropdownMenuItem asChild>
+                                        <Link href="/menus">
+                                            <CalendarDays /> Mes menus
                                         </Link>
                                     </DropdownMenuItem>
                                     <DropdownMenuItem asChild>
@@ -150,6 +162,7 @@ export default function FoodLayout({ children }: { children: ReactNode }) {
                         <Link href="/recettes?tag=de-saison">De saison</Link>
                         <Link href="/a-propos">L’esprit Cuistot Club</Link>
                         <Link href="/proposer">Proposer une recette</Link>
+                        <Link href="/menus">Les menus</Link>
                         {!user && <Link href="/login">Se connecter</Link>}
                     </nav>
                 )}
