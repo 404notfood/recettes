@@ -66,6 +66,8 @@ Les nouveaux tests couvrent l’accès public, la confidentialité, les proposit
 
 ## Pour un VPS
 
+Adresse retenue : **https://recettes.cuistot-club.fr**. La procédure complète est dans [docs/DEPLOYMENT.md](docs/DEPLOYMENT.md), avec la configuration JSON à importer dans ton générateur, `.env.production.example`, le service Inertia SSR et la commande `php artisan app:create-admin adresse@example.fr`. Le catalogue s'importe avec `php artisan db:seed --force` : 110 recettes et 10 catégories, sans doublons ni écrasement des modifications ou archives.
+
 Utiliser Nginx, PHP-FPM, PostgreSQL et Node pour le SSR. Compiler les assets, lancer les migrations sans `migrate:fresh`, configurer le stockage, un transport de courriels, les tâches en arrière-plan et des sauvegardes externes des données et des images. Mettre `APP_ENV=production`, `APP_DEBUG=false`, l’URL publique et les secrets dans l’environnement du serveur. Compléter les coordonnées de l’éditeur et les durées de conservation dans la page de confidentialité avant ouverture publique.
 
 Les composants et les photographies de présentation sont documentés dans `ASSETS.md`.

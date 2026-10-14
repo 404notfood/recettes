@@ -1,0 +1,25 @@
+# Cuistot Club managed SSR service
+[Unit]
+Description=Cuistot Club - Inertia SSR (__PROJECT__)
+After=network.target
+StartLimitIntervalSec=60
+StartLimitBurst=5
+
+[Service]
+Type=simple
+User=__PROJECT__
+Group=__PROJECT__
+WorkingDirectory=/home/__PROJECT__/app
+Environment=NODE_ENV=production
+ExecStart=__NODE__ /home/__PROJECT__/app/bootstrap/ssr/app.js
+Restart=on-failure
+RestartSec=5
+TimeoutStopSec=20
+UMask=0027
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+
+[Install]
+WantedBy=multi-user.target

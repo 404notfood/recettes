@@ -1,0 +1,39 @@
+{
+    "schemaVersion": 1,
+    "configuration": {
+        "name": "cuistot-recettes",
+        "type": "laravel-react",
+        "domains": [{ "name": "recettes.cuistot-club.fr", "role": "application" }],
+        "php": "8.4",
+        "node": "24",
+        "availablePhp": ["8.4"],
+        "availableNode": ["24"],
+        "packageManager": "npm",
+        "reactMode": "build",
+        "database": "postgresql",
+        "redis": false,
+        "queue": true,
+        "queueDriver": "database",
+        "workers": 1,
+        "scheduler": false,
+        "horizon": false,
+        "https": true,
+        "email": "",
+        "ssh": true,
+        "sshAuth": "password",
+        "source": "git",
+        "repository": "https://github.com/TON-COMPTE/cuistot-recettes.git",
+        "branch": "main",
+        "layout": "simple",
+        "migrations": true,
+        "envFile": ".env",
+        "envExample": ".env.production.example",
+        "supervisor": "systemd",
+        "uploadSize": 8,
+        "phpChildren": 8,
+        "hooks": [
+            { "stage": "beforeMigration", "cwd": ".", "argv": ["npm", "run", "build:ssr-only"] },
+            { "stage": "afterStart", "cwd": ".", "argv": ["php", "artisan", "db:seed", "--force"] }
+        ]
+    }
+}

@@ -1,0 +1,818 @@
+{
+    "goulash-hongrois": {
+        "image": "/images/collection/goulash-hongrois.webp",
+        "title": "Gulyásleves.jpg",
+        "author": "Christo",
+        "source": "https://commons.wikimedia.org/wiki/File:Guly%C3%A1sleves.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "boeuf-bourguignon": {
+        "image": "/images/collection/boeuf-bourguignon.webp",
+        "title": "Beef bourguignon-01.jpg",
+        "author": "balise42",
+        "source": "https://commons.wikimedia.org/wiki/File:Beef_bourguignon-01.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "tartiflette-reblochon": {
+        "image": "/images/collection/tartiflette-reblochon.webp",
+        "title": "Une tartiflette sortie du four.jpg",
+        "author": "Benoît Prieur",
+        "source": "https://commons.wikimedia.org/wiki/File:Une_tartiflette_sortie_du_four.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "croziflette-savoyarde": {
+        "image": "/images/collection/croziflette-savoyarde.webp",
+        "title": "Croziflette.jpg",
+        "author": "HaguardDuNord",
+        "source": "https://commons.wikimedia.org/wiki/File:Croziflette.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "blanquette-de-veau": {
+        "image": "/images/collection/blanquette-de-veau.webp",
+        "title": "Blanquette de veau à l'ancienne 06.jpg",
+        "author": "Arnaud 25",
+        "source": "https://commons.wikimedia.org/wiki/File:Blanquette_de_veau_%C3%A0_l%27ancienne_06.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "pot-au-feu-familial": {
+        "image": "/images/collection/pot-au-feu-familial.webp",
+        "title": "Pot-au-feu2.jpg",
+        "author": "Andre",
+        "source": "https://commons.wikimedia.org/wiki/File:Pot-au-feu2.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "http://creativecommons.org/licenses/by-sa/3.0/"
+    },
+    "kig-ha-farz": {
+        "image": "/images/collection/kig-ha-farz.webp",
+        "title": "Kig ha farz du léon.jpg",
+        "author": "Jlandres",
+        "source": "https://commons.wikimedia.org/wiki/File:Kig_ha_farz_du_l%C3%A9on.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "riz-au-lait-vanille": {
+        "image": "/images/collection/riz-au-lait-vanille.webp",
+        "title": "Rice pudding cinnamon.jpg",
+        "author": "Ross Berteig from Monrovia, California, USA",
+        "source": "https://commons.wikimedia.org/wiki/File:Rice_pudding_cinnamon.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "kouign-amann-maison": {
+        "image": "/images/collection/kouign-amann-maison.webp",
+        "title": "Kouignamann.JPG",
+        "author": "Haltopub",
+        "source": "https://commons.wikimedia.org/wiki/File:Kouignamann.JPG",
+        "license": "Public domain",
+        "license_url": "https://commons.wikimedia.org/wiki/File:Kouignamann.JPG"
+    },
+    "poulet-au-cidre": {
+        "image": "/images/collection/poulet-au-cidre.webp",
+        "title": "Poulet vallee d'auge cropped.png",
+        "author": "user:Popo le Chien / user:Ludo29",
+        "source": "https://commons.wikimedia.org/wiki/File:Poulet_vallee_d%27auge_cropped.png",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "nuggets-poulet-au-four": {
+        "image": "/images/collection/nuggets-poulet-au-four.webp",
+        "title": "Chicken nuggets on a plate.jpg",
+        "author": "Jiafei Slay Queen",
+        "source": "https://commons.wikimedia.org/wiki/File:Chicken_nuggets_on_a_plate.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "oeufs-mimosa": {
+        "image": "/images/collection/oeufs-mimosa.webp",
+        "title": "Deviled eggs closeup.jpg",
+        "author": "Michele Ursino",
+        "source": "https://commons.wikimedia.org/wiki/File:Deviled_eggs_closeup.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "veloute-potimarron-chataignes-sauge": {
+        "image": "/images/collection/veloute-potimarron-chataignes-sauge.webp",
+        "title": "Autumn Soup (Unsplash).jpg",
+        "author": "Cala cala_maffia",
+        "source": "https://commons.wikimedia.org/wiki/File:Autumn_Soup_(Unsplash).jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "potage-panais-poire-noisettes": {
+        "image": "/images/collection/potage-panais-poire-noisettes.webp",
+        "title": "Parsnip & Pear Soup accented with Roasted Chestnuts.jpg",
+        "author": "HarshLight",
+        "source": "https://commons.wikimedia.org/wiki/File:Parsnip_%26_Pear_Soup_accented_with_Roasted_Chestnuts.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "veloute-carottes-gingembre-coco": {
+        "image": "/images/collection/veloute-carottes-gingembre-coco.webp",
+        "title": "Carrot soup spoon.jpg",
+        "author": "jules / stone soup",
+        "source": "https://commons.wikimedia.org/wiki/File:Carrot_soup_spoon.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "soupe-petits-pois-menthe-citron": {
+        "image": "/images/collection/soupe-petits-pois-menthe-citron.webp",
+        "title": "Pea soup 2.jpg",
+        "author": "Tiia Monto",
+        "source": "https://commons.wikimedia.org/wiki/File:Pea_soup_2.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "veloute-champignons-miso-sesame": {
+        "image": "/images/collection/veloute-champignons-miso-sesame.webp",
+        "title": "Cream Mushroom soup 2.jpg",
+        "author": "Redeemer|Vodesnet",
+        "source": "https://commons.wikimedia.org/wiki/File:Cream_Mushroom_soup_2.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "oyakodon-poulet-oeuf": {
+        "image": "/images/collection/oyakodon-poulet-oeuf.webp",
+        "title": "Oyakodon 003.jpg",
+        "author": "Ocdp",
+        "source": "https://commons.wikimedia.org/wiki/File:Oyakodon_003.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "poulet-teriyaki-riz": {
+        "image": "/images/collection/poulet-teriyaki-riz.webp",
+        "title": "Chicken teriyaki and rice (3432812807).jpg",
+        "author": "Geoff Peters from Vancouver, BC, Canada",
+        "source": "https://commons.wikimedia.org/wiki/File:Chicken_teriyaki_and_rice_(3432812807).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "soupe-miso-tofu-wakame": {
+        "image": "/images/collection/soupe-miso-tofu-wakame.webp",
+        "title": "Miso Soup 001.jpg",
+        "author": "Ocdp",
+        "source": "https://commons.wikimedia.org/wiki/File:Miso_Soup_001.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "onigiri-thon-mayonnaise": {
+        "image": "/images/collection/onigiri-thon-mayonnaise.webp",
+        "title": "Onigiri 002.jpg",
+        "author": "Ocdp",
+        "source": "https://commons.wikimedia.org/wiki/File:Onigiri_002.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "curry-japonais-legumes": {
+        "image": "/images/collection/curry-japonais-legumes.webp",
+        "title": "Deep-fried Tofu Japanese Curry Rice - MOGUMOGU 2024-07-26.jpg",
+        "author": "Andy Li",
+        "source": "https://commons.wikimedia.org/wiki/File:Deep-fried_Tofu_Japanese_Curry_Rice_-_MOGUMOGU_2024-07-26.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "salade-lentilles-betterave-chevre": {
+        "image": "/images/collection/salade-lentilles-betterave-chevre.webp",
+        "title": "Lentil Salad (49195230383).jpg",
+        "author": "spurekar",
+        "source": "https://commons.wikimedia.org/wiki/File:Lentil_Salad_(49195230383).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "salade-boulgour-pois-chiches-herbes": {
+        "image": "/images/collection/salade-boulgour-pois-chiches-herbes.webp",
+        "title": "Bulgur salad (4354349203).jpg",
+        "author": "Karen and Brad Emerson",
+        "source": "https://commons.wikimedia.org/wiki/File:Bulgur_salad_(4354349203).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "salade-endives-pomme-noix": {
+        "image": "/images/collection/salade-endives-pomme-noix.webp",
+        "title": "Pear and endive salad (42275188765).jpg",
+        "author": "Joey Doll",
+        "source": "https://commons.wikimedia.org/wiki/File:Pear_and_endive_salad_(42275188765).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "salade-facon-nicoise": {
+        "image": "/images/collection/salade-facon-nicoise.webp",
+        "title": "Salade niçoise (7545098258).jpg",
+        "author": "cyclonebill from Copenhagen, Denmark",
+        "source": "https://commons.wikimedia.org/wiki/File:Salade_ni%C3%A7oise_(7545098258).jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "salade-pommes-de-terre-hareng": {
+        "image": "/images/collection/salade-pommes-de-terre-hareng.webp",
+        "title": "Smoked herring with pepper and roasted russet baby potatoes on greens - Massachusetts.jpg",
+        "author": "Daderot",
+        "source": "https://commons.wikimedia.org/wiki/File:Smoked_herring_with_pepper_and_roasted_russet_baby_potatoes_on_greens_-_Massachusetts.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "gratin-pates-jambon-fromage": {
+        "image": "/images/collection/gratin-pates-jambon-fromage.webp",
+        "title": "A Baked Pasta with Double Cheese and Ham.jpg",
+        "author": "Peachyeung316",
+        "source": "https://commons.wikimedia.org/wiki/File:A_Baked_Pasta_with_Double_Cheese_and_Ham.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "gratin-dauphinois": {
+        "image": "/images/collection/gratin-dauphinois.webp",
+        "title": "Gratin dauphinois.jpg",
+        "author": "Ludovic Péron",
+        "source": "https://commons.wikimedia.org/wiki/File:Gratin_dauphinois.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "quiche-lorraine": {
+        "image": "/images/collection/quiche-lorraine.webp",
+        "title": "Quiche lorraine 04.jpg",
+        "author": "Arnaud 25",
+        "source": "https://commons.wikimedia.org/wiki/File:Quiche_lorraine_04.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "lasagnes-boeuf": {
+        "image": "/images/collection/lasagnes-boeuf.webp",
+        "title": "Meaty Lasagna 8of8 (8736299782).jpg",
+        "author": "Breville USA",
+        "source": "https://commons.wikimedia.org/wiki/File:Meaty_Lasagna_8of8_(8736299782).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "chili-con-carne": {
+        "image": "/images/collection/chili-con-carne.webp",
+        "title": "Flickr - cyclonebill - Chili con carne (2).jpg",
+        "author": "cyclonebill",
+        "source": "https://commons.wikimedia.org/wiki/File:Flickr_-_cyclonebill_-_Chili_con_carne_(2).jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "ratatouille-provencale": {
+        "image": "/images/collection/ratatouille-provencale.webp",
+        "title": "Ratatouille 001.jpg",
+        "author": "Arnaud 25",
+        "source": "https://commons.wikimedia.org/wiki/File:Ratatouille_001.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "dahl-lentilles-corail": {
+        "image": "/images/collection/dahl-lentilles-corail.webp",
+        "title": "Red Lentils Daal.jpg",
+        "author": "Tekksavvy",
+        "source": "https://commons.wikimedia.org/wiki/File:Red_Lentils_Daal.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "curry-pois-chiches-epinards": {
+        "image": "/images/collection/curry-pois-chiches-epinards.webp",
+        "title": "Chickpea Curry.jpg",
+        "author": "Gaurav Dhwaj Khadka",
+        "source": "https://commons.wikimedia.org/wiki/File:Chickpea_Curry.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "risotto-champignons": {
+        "image": "/images/collection/risotto-champignons.webp",
+        "title": "Mushroom risotto (3990739885).jpg",
+        "author": "Karen and Brad Emerson",
+        "source": "https://commons.wikimedia.org/wiki/File:Mushroom_risotto_(3990739885).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "falafels-maison-au-four": {
+        "image": "/images/collection/falafels-maison-au-four.webp",
+        "title": "Falafel.JPG",
+        "author": "The original uploader was Jerem at French Wikipedia.",
+        "source": "https://commons.wikimedia.org/wiki/File:Falafel.JPG",
+        "license": "CC BY-SA 3.0",
+        "license_url": "http://creativecommons.org/licenses/by-sa/3.0/"
+    },
+    "aubergines-parmigiana": {
+        "image": "/images/collection/aubergines-parmigiana.webp",
+        "title": "Melanzane alla parmigiana finished.jpg",
+        "author": "Joy",
+        "source": "https://commons.wikimedia.org/wiki/File:Melanzane_alla_parmigiana_finished.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "poivrons-farcis-quinoa": {
+        "image": "/images/collection/poivrons-farcis-quinoa.webp",
+        "title": "Vegetarian stuffed peppers from fruitsandveggiesmatter.gov.jpg",
+        "author": "U.S. Centers for Disease Control and Prevention",
+        "source": "https://commons.wikimedia.org/wiki/File:Vegetarian_stuffed_peppers_from_fruitsandveggiesmatter.gov.jpg",
+        "license": "Public domain",
+        "license_url": "https://commons.wikimedia.org/wiki/File:Vegetarian_stuffed_peppers_from_fruitsandveggiesmatter.gov.jpg"
+    },
+    "couscous-legumes-pois-chiches": {
+        "image": "/images/collection/couscous-legumes-pois-chiches.webp",
+        "title": "Vegetarian Couscous.jpg",
+        "author": "Emna Mizouni",
+        "source": "https://commons.wikimedia.org/wiki/File:Vegetarian_Couscous.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "pate-a-crepes": {
+        "image": "/images/collection/pate-a-crepes.webp",
+        "title": "Crepes dsc07085.jpg",
+        "author": "David Monniaux",
+        "source": "https://commons.wikimedia.org/wiki/File:Crepes_dsc07085.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "http://creativecommons.org/licenses/by-sa/3.0/"
+    },
+    "tarte-tatin-pommes": {
+        "image": "/images/collection/tarte-tatin-pommes.webp",
+        "title": "Tarte tatin appletart.jpg",
+        "author": "Loslazos",
+        "source": "https://commons.wikimedia.org/wiki/File:Tarte_tatin_appletart.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "crumble-pommes-cannelle": {
+        "image": "/images/collection/crumble-pommes-cannelle.webp",
+        "title": "British apple crumble 05.jpg",
+        "author": "Jonathan Harker",
+        "source": "https://commons.wikimedia.org/wiki/File:British_apple_crumble_05.jpg",
+        "license": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0"
+    },
+    "mousse-chocolat": {
+        "image": "/images/collection/mousse-chocolat.webp",
+        "title": "Chocolate mousse - stonesoup.jpg",
+        "author": "jules / stonesoup",
+        "source": "https://commons.wikimedia.org/wiki/File:Chocolate_mousse_-_stonesoup.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "creme-brulee-vanille": {
+        "image": "/images/collection/creme-brulee-vanille.webp",
+        "title": "Crème brûlée at restaurant in Zushi.jpg",
+        "author": "Syced",
+        "source": "https://commons.wikimedia.org/wiki/File:Cr%C3%A8me_br%C3%BBl%C3%A9e_at_restaurant_in_Zushi.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "fondant-chocolat": {
+        "image": "/images/collection/fondant-chocolat.webp",
+        "title": "Chocolate lava cake.jpg",
+        "author": "sanctumsolitude",
+        "source": "https://commons.wikimedia.org/wiki/File:Chocolate_lava_cake.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "cheesecake-citron": {
+        "image": "/images/collection/cheesecake-citron.webp",
+        "title": "Mini lemon cheesecake squares with raspberries.jpg",
+        "author": "Megan Chromik",
+        "source": "https://commons.wikimedia.org/wiki/File:Mini_lemon_cheesecake_squares_with_raspberries.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "pancakes-moelleux": {
+        "image": "/images/collection/pancakes-moelleux.webp",
+        "title": "Foodiesfeed.com pouring-honey-on-pancakes-with-walnuts.jpg",
+        "author": "Mae Mu",
+        "source": "https://commons.wikimedia.org/wiki/File:Foodiesfeed.com_pouring-honey-on-pancakes-with-walnuts.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "gaufres-maison": {
+        "image": "/images/collection/gaufres-maison.webp",
+        "title": "Waffle with strawberries and confectioner's sugar.jpg",
+        "author": "Ralph Daily",
+        "source": "https://commons.wikimedia.org/wiki/File:Waffle_with_strawberries_and_confectioner%27s_sugar.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "granola-maison": {
+        "image": "/images/collection/granola-maison.webp",
+        "title": "Granola Honey and Vanilla Top.jpg",
+        "author": "Bajinra",
+        "source": "https://commons.wikimedia.org/wiki/File:Granola_Honey_and_Vanilla_Top.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "porridge-pomme-cannelle": {
+        "image": "/images/collection/porridge-pomme-cannelle.webp",
+        "title": "Apple cinnamon oatmeal.jpg",
+        "author": "Shisma",
+        "source": "https://commons.wikimedia.org/wiki/File:Apple_cinnamon_oatmeal.jpg",
+        "license": "CC BY 4.0",
+        "license_url": "https://creativecommons.org/licenses/by/4.0"
+    },
+    "oeufs-benedicte": {
+        "image": "/images/collection/oeufs-benedicte.webp",
+        "title": "Eggs Benedict-01-cropped.jpg",
+        "author": "Jon Mountjoy",
+        "source": "https://commons.wikimedia.org/wiki/File:Eggs_Benedict-01-cropped.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "shakshuka-tomates": {
+        "image": "/images/collection/shakshuka-tomates.webp",
+        "title": "Shakshuka by Calliopejen1.jpg",
+        "author": "Calliopejen1",
+        "source": "https://commons.wikimedia.org/wiki/File:Shakshuka_by_Calliopejen1.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "tartines-avocat-oeuf": {
+        "image": "/images/collection/tartines-avocat-oeuf.webp",
+        "title": "Avocado toast with eggs (28508171495).jpg",
+        "author": "Luca Nebuloni from Milan, Italy",
+        "source": "https://commons.wikimedia.org/wiki/File:Avocado_toast_with_eggs_(28508171495).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "scones-maison": {
+        "image": "/images/collection/scones-maison.webp",
+        "title": "Scones and tea.jpg",
+        "author": "AlphaLemur",
+        "source": "https://commons.wikimedia.org/wiki/File:Scones_and_tea.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "muffins-myrtilles": {
+        "image": "/images/collection/muffins-myrtilles.webp",
+        "title": "Blueberry muffins - ND0 3639 (8694455448).jpg",
+        "author": "N i c o l a from Fiumicino (Rome), Italy",
+        "source": "https://commons.wikimedia.org/wiki/File:Blueberry_muffins_-_ND0_3639_(8694455448).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "pain-blanc-maison": {
+        "image": "/images/collection/pain-blanc-maison.webp",
+        "title": "Tin Loaf - one slash in the crust.jpg",
+        "author": "Mike Finn",
+        "source": "https://commons.wikimedia.org/wiki/File:Tin_Loaf_-_one_slash_in_the_crust.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "baguettes-maison": {
+        "image": "/images/collection/baguettes-maison.webp",
+        "title": "Baguettes - stonesoup.jpg",
+        "author": "jules / stonesoup",
+        "source": "https://commons.wikimedia.org/wiki/File:Baguettes_-_stonesoup.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "brioche-pur-beurre": {
+        "image": "/images/collection/brioche-pur-beurre.webp",
+        "title": "Brioche.jpg",
+        "author": "Auteur non renseigné (Wikimedia Commons)",
+        "source": "https://commons.wikimedia.org/wiki/File:Brioche.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "http://creativecommons.org/licenses/by-sa/3.0/"
+    },
+    "pain-complet-maison": {
+        "image": "/images/collection/pain-complet-maison.webp",
+        "title": "Vegan no-knead whole wheat bread loaf, September 2010.jpg",
+        "author": "Veganbaking.net",
+        "source": "https://commons.wikimedia.org/wiki/File:Vegan_no-knead_whole_wheat_bread_loaf,_September_2010.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "pain-seigle-maison": {
+        "image": "/images/collection/pain-seigle-maison.webp",
+        "title": "Rye and whole wheat bread, September 2009.jpg",
+        "author": "Dave Bonta",
+        "source": "https://commons.wikimedia.org/wiki/File:Rye_and_whole_wheat_bread,_September_2009.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "focaccia-romarin": {
+        "image": "/images/collection/focaccia-romarin.webp",
+        "title": "Rosemary Focaccia.jpg",
+        "author": "Parkerman & Christie from San Diego, USA",
+        "source": "https://commons.wikimedia.org/wiki/File:Rosemary_Focaccia.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "petits-pains-au-lait": {
+        "image": "/images/collection/petits-pains-au-lait.webp",
+        "title": "Pain au lait.jpg",
+        "author": "DocteurCosmos",
+        "source": "https://commons.wikimedia.org/wiki/File:Pain_au_lait.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "pains-pita-maison": {
+        "image": "/images/collection/pains-pita-maison.webp",
+        "title": "Pita Flatbread.jpg",
+        "author": "fugzu",
+        "source": "https://commons.wikimedia.org/wiki/File:Pita_Flatbread.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "buns-burger-maison": {
+        "image": "/images/collection/buns-burger-maison.webp",
+        "title": "Hamburger buns at BJBF 2026 20260503154048.jpg",
+        "author": "TurnOnTheNight",
+        "source": "https://commons.wikimedia.org/wiki/File:Hamburger_buns_at_BJBF_2026_20260503154048.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "coq-au-vin": {
+        "image": "/images/collection/coq-au-vin.webp",
+        "title": "Gourmet coq au vin.jpg",
+        "author": "Beck from East Midlands, United Kingdon",
+        "source": "https://commons.wikimedia.org/wiki/File:Gourmet_coq_au_vin.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "cassoulet-maison": {
+        "image": "/images/collection/cassoulet-maison.webp",
+        "title": "Bowl of cassoulet.JPG",
+        "author": "BrokenSphere",
+        "source": "https://commons.wikimedia.org/wiki/File:Bowl_of_cassoulet.JPG",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "soupe-oignon-gratinee": {
+        "image": "/images/collection/soupe-oignon-gratinee.webp",
+        "title": "French onion soup - Boston, MA.jpg",
+        "author": "Daderot",
+        "source": "https://commons.wikimedia.org/wiki/File:French_onion_soup_-_Boston,_MA.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "veloute-courgettes-fromage-frais": {
+        "image": "/images/collection/veloute-courgettes-fromage-frais.webp",
+        "title": "Zucchini soup.JPG",
+        "author": "Sb2s3",
+        "source": "https://commons.wikimedia.org/wiki/File:Zucchini_soup.JPG",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "veloute-tomates-roties-basilic": {
+        "image": "/images/collection/veloute-tomates-roties-basilic.webp",
+        "title": "Tomato soup.jpg",
+        "author": "Auteur non renseigné (Wikimedia Commons)",
+        "source": "https://commons.wikimedia.org/wiki/File:Tomato_soup.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "minestrone-legumes": {
+        "image": "/images/collection/minestrone-legumes.webp",
+        "title": "Minestrone soup.jpg",
+        "author": "Katrin Morenz from Aachen, Deutschland",
+        "source": "https://commons.wikimedia.org/wiki/File:Minestrone_soup.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "veloute-chou-fleur-curry": {
+        "image": "/images/collection/veloute-chou-fleur-curry.webp",
+        "title": "Vegan Cream of Cauliflower Soup (8383040989).jpg",
+        "author": "Lablascovegmenu from London",
+        "source": "https://commons.wikimedia.org/wiki/File:Vegan_Cream_of_Cauliflower_Soup_(8383040989).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "yakisoba-legumes": {
+        "image": "/images/collection/yakisoba-legumes.webp",
+        "title": "Yakisoba amb verdures - Tora Taverna Japonesa.jpg",
+        "author": "Francesc Fort",
+        "source": "https://commons.wikimedia.org/wiki/File:Yakisoba_amb_verdures_-_Tora_Taverna_Japonesa.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "okonomiyaki-chou": {
+        "image": "/images/collection/okonomiyaki-chou.webp",
+        "title": "Okonomiyaki 001.jpg",
+        "author": "ume-y",
+        "source": "https://commons.wikimedia.org/wiki/File:Okonomiyaki_001.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "tamagoyaki-omelette-japonaise": {
+        "image": "/images/collection/tamagoyaki-omelette-japonaise.webp",
+        "title": "Tamagoyaki 01.JPG",
+        "author": "Asacyan",
+        "source": "https://commons.wikimedia.org/wiki/File:Tamagoyaki_01.JPG",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "gyozas-porc-chou": {
+        "image": "/images/collection/gyozas-porc-chou.webp",
+        "title": "Mr.gyoza.jpg",
+        "author": "Kykk wiki",
+        "source": "https://commons.wikimedia.org/wiki/File:Mr.gyoza.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "aubergines-miso-nasu-dengaku": {
+        "image": "/images/collection/aubergines-miso-nasu-dengaku.webp",
+        "title": "Nasu dengaku (15284831066).jpg",
+        "author": "pelican from Tokyo, Japan",
+        "source": "https://commons.wikimedia.org/wiki/File:Nasu_dengaku_(15284831066).jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "salade-grecque": {
+        "image": "/images/collection/salade-grecque.webp",
+        "title": "Greek Salad Choriatiki.jpg",
+        "author": "https://www.flickr.com/photos/zone41/",
+        "source": "https://commons.wikimedia.org/wiki/File:Greek_Salad_Choriatiki.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "salade-cesar-poulet": {
+        "image": "/images/collection/salade-cesar-poulet.webp",
+        "title": "Chicken Caesar salad - Auckland, New Zealand.jpg",
+        "author": "Daderot",
+        "source": "https://commons.wikimedia.org/wiki/File:Chicken_Caesar_salad_-_Auckland,_New_Zealand.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "salade-quinoa-avocat-mangue": {
+        "image": "/images/collection/salade-quinoa-avocat-mangue.webp",
+        "title": "IMG of salad.jpg",
+        "author": "Avinash singh rawat",
+        "source": "https://commons.wikimedia.org/wiki/File:IMG_of_salad.jpg",
+        "license": "CC BY-SA 4.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/4.0"
+    },
+    "salade-pates-pesto-tomates": {
+        "image": "/images/collection/salade-pates-pesto-tomates.webp",
+        "title": "Pesto Pasta Salad.jpg",
+        "author": "Whitney from Chicago, IL",
+        "source": "https://commons.wikimedia.org/wiki/File:Pesto_Pasta_Salad.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "salade-pommes-de-terre-oeufs": {
+        "image": "/images/collection/salade-pommes-de-terre-oeufs.webp",
+        "title": "Potatoes and eggs salad.jpg",
+        "author": "Gran",
+        "source": "https://commons.wikimedia.org/wiki/File:Potatoes_and_eggs_salad.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "tomates-mozzarella-basilic": {
+        "image": "/images/collection/tomates-mozzarella-basilic.webp",
+        "title": "Caprese-1.jpg",
+        "author": "Rainer Zenz",
+        "source": "https://commons.wikimedia.org/wiki/File:Caprese-1.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "http://creativecommons.org/licenses/by-sa/3.0/"
+    },
+    "houmous-maison": {
+        "image": "/images/collection/houmous-maison.webp",
+        "title": "Hummus from The Nile.jpg",
+        "author": "Paul Goyette",
+        "source": "https://commons.wikimedia.org/wiki/File:Hummus_from_The_Nile.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    },
+    "tzatziki-maison": {
+        "image": "/images/collection/tzatziki-maison.webp",
+        "title": "Tzatziki IMGP1444.jpg",
+        "author": "Nikodem Nijaki",
+        "source": "https://commons.wikimedia.org/wiki/File:Tzatziki_IMGP1444.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "tapenade-olives-noires": {
+        "image": "/images/collection/tapenade-olives-noires.webp",
+        "title": "Tapenade ramequin.jpg",
+        "author": "Berenguier Duncan",
+        "source": "https://commons.wikimedia.org/wiki/File:Tapenade_ramequin.jpg",
+        "license": "CC BY-SA 2.5",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.5"
+    },
+    "bruschettas-tomate-basilic": {
+        "image": "/images/collection/bruschettas-tomate-basilic.webp",
+        "title": "Bruschetta Tomate 2007 by-RaBoe 03.jpg",
+        "author": "Ra Boe",
+        "source": "https://commons.wikimedia.org/wiki/File:Bruschetta_Tomate_2007_by-RaBoe_03.jpg",
+        "license": "CC BY-SA 2.5",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.5"
+    },
+    "feuilletes-chevre-miel": {
+        "image": "/images/collection/feuilletes-chevre-miel.webp",
+        "title": "Mini goat cheese tarts on a rack.jpg",
+        "author": "Glen MacLarty",
+        "source": "https://commons.wikimedia.org/wiki/File:Mini_goat_cheese_tarts_on_a_rack.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "champignons-farcis-fromage": {
+        "image": "/images/collection/champignons-farcis-fromage.webp",
+        "title": "Stuffed Mushroom Caps (47138831042).jpg",
+        "author": "MBC Foods from Australia",
+        "source": "https://commons.wikimedia.org/wiki/File:Stuffed_Mushroom_Caps_(47138831042).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "artichauts-vinaigrette": {
+        "image": "/images/collection/artichauts-vinaigrette.webp",
+        "title": "Cooked artichokes.jpg",
+        "author": "Mauro Cateb",
+        "source": "https://commons.wikimedia.org/wiki/File:Cooked_artichokes.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "carottes-rapees-citron-cumin": {
+        "image": "/images/collection/carottes-rapees-citron-cumin.webp",
+        "title": "French grated carrot salad (cropped).jpg",
+        "author": "건복맘",
+        "source": "https://commons.wikimedia.org/wiki/File:French_grated_carrot_salad_(cropped).jpg",
+        "license": "CC BY 2.0 kr",
+        "license_url": "https://creativecommons.org/licenses/by/2.0/kr/deed.en"
+    },
+    "gougeres-comte": {
+        "image": "/images/collection/gougeres-comte.webp",
+        "title": "Petites gougères apéritif.jpg",
+        "author": "Jebulon",
+        "source": "https://commons.wikimedia.org/wiki/File:Petites_goug%C3%A8res_ap%C3%A9ritif.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "pate-sablee-maison": {
+        "image": "/images/collection/pate-sablee-maison.webp",
+        "title": "Recette pate brisee etape 5.jpg",
+        "author": "Romain Behar",
+        "source": "https://commons.wikimedia.org/wiki/File:Recette_pate_brisee_etape_5.jpg",
+        "license": "Public domain",
+        "license_url": "https://commons.wikimedia.org/wiki/File:Recette_pate_brisee_etape_5.jpg"
+    },
+    "pate-feuilletee-maison": {
+        "image": "/images/collection/pate-feuilletee-maison.webp",
+        "title": "Pate feuilletee.jpg",
+        "author": "Popo le Chien",
+        "source": "https://commons.wikimedia.org/wiki/File:Pate_feuilletee.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "pate-brisee-maison": {
+        "image": "/images/collection/pate-brisee-maison.webp",
+        "title": "Recette pate brisee etape 6.jpg",
+        "author": "Romain Behar",
+        "source": "https://commons.wikimedia.org/wiki/File:Recette_pate_brisee_etape_6.jpg",
+        "license": "Public domain",
+        "license_url": "https://commons.wikimedia.org/wiki/File:Recette_pate_brisee_etape_6.jpg"
+    },
+    "pate-pizza-maison": {
+        "image": "/images/collection/pate-pizza-maison.webp",
+        "title": "Pizza night- dough is ready (33502053445).jpg",
+        "author": "terri_bateman",
+        "source": "https://commons.wikimedia.org/wiki/File:Pizza_night-_dough_is_ready_(33502053445).jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "pate-pates-fraiches": {
+        "image": "/images/collection/pate-pates-fraiches.webp",
+        "title": "Cooking-cuisine-delicious-egg-327143.jpg",
+        "author": "ZsoltHubicska",
+        "source": "https://commons.wikimedia.org/wiki/File:Cooking-cuisine-delicious-egg-327143.jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "pate-a-choux": {
+        "image": "/images/collection/pate-a-choux.webp",
+        "title": "Choux pastry buns, 2009.jpg",
+        "author": "Two Helmets Cooking",
+        "source": "https://commons.wikimedia.org/wiki/File:Choux_pastry_buns,_2009.jpg",
+        "license": "CC BY 2.0",
+        "license_url": "https://creativecommons.org/licenses/by/2.0"
+    },
+    "macarons-chocolat": {
+        "image": "/images/collection/macarons-chocolat.webp",
+        "title": "Chocolate Macaron.jpg",
+        "author": "ChefNiko",
+        "source": "https://commons.wikimedia.org/wiki/File:Chocolate_Macaron.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "chouquettes-maison": {
+        "image": "/images/collection/chouquettes-maison.webp",
+        "title": "Chouquette (cropped).jpg",
+        "author": "The original uploader was Aerith at French Wikipedia.",
+        "source": "https://commons.wikimedia.org/wiki/File:Chouquette_(cropped).jpg",
+        "license": "CC0",
+        "license_url": "http://creativecommons.org/publicdomain/zero/1.0/deed.en"
+    },
+    "eclairs-chocolat": {
+        "image": "/images/collection/eclairs-chocolat.webp",
+        "title": "Eclairs with dark chocolate glaze - group 2.jpg",
+        "author": "Nihonjoe",
+        "source": "https://commons.wikimedia.org/wiki/File:Eclairs_with_dark_chocolate_glaze_-_group_2.jpg",
+        "license": "CC BY-SA 3.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/3.0"
+    },
+    "profiteroles-chocolat": {
+        "image": "/images/collection/profiteroles-chocolat.webp",
+        "title": "Profiteroles by Istelleinad 2.jpg",
+        "author": "Danielle Tsi from Palo Alto, CA, USA",
+        "source": "https://commons.wikimedia.org/wiki/File:Profiteroles_by_Istelleinad_2.jpg",
+        "license": "CC BY-SA 2.0",
+        "license_url": "https://creativecommons.org/licenses/by-sa/2.0"
+    }
+}
