@@ -71,4 +71,4 @@ Adresse retenue : **https://recettes.cuistot-club.fr**. La procédure complète 
 Utiliser Nginx, PHP-FPM, PostgreSQL et Node pour le SSR. Compiler les assets, lancer les migrations sans `migrate:fresh`, configurer le stockage, un transport de courriels, les tâches en arrière-plan et des sauvegardes externes des données et des images. Mettre `APP_ENV=production`, `APP_DEBUG=false`, l’URL publique et les secrets dans l’environnement du serveur. Compléter les coordonnées de l’éditeur et les durées de conservation dans la page de confidentialité avant ouverture publique.
 
 Les composants et les photographies de présentation sont documentés dans `ASSETS.md`.
-"# recettes" 
+"# recettes"

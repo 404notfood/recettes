@@ -18,23 +18,23 @@ Ouvrir https://404notfood.fr/generateur/project.html et importer **`deploy/gener
 
 Compléter les champs avant de télécharger le ZIP :
 
-| Champ | Valeur |
-| --- | --- |
-| Nom du projet | `cuistot-recettes` |
-| Domaine principal | `recettes.cuistot-club.fr` |
-| Source | Git ; remplacer `https://github.com/TON-COMPTE/cuistot-recettes.git` par le vrai dépôt |
-| Branche | `main` |
-| Stack | Laravel + React |
-| PHP / Node | PHP 8.4 / Node 24, à confirmer installés par le bootstrap |
-| Gestionnaire de paquets | **npm**, explicitement ; le starter contient aussi un lockfile pnpm |
-| Frontend | **Build uniquement** |
-| Base | PostgreSQL |
-| Environnement d'exemple | `.env.production.example` ; environnement réel `.env` |
-| Arborescence | Simple : `/home/cuistot-recettes/app` |
-| Migrations | Activées |
-| Worker | Un worker, queue `database` |
-| Redis / Horizon / scheduler | Désactivés, aucun besoin actuel |
-| HTTPS | Activé ; renseigner ton vrai e-mail Let’s Encrypt |
+| Champ                       | Valeur                                                                                 |
+| --------------------------- | -------------------------------------------------------------------------------------- |
+| Nom du projet               | `cuistot-recettes`                                                                     |
+| Domaine principal           | `recettes.cuistot-club.fr`                                                             |
+| Source                      | Git ; remplacer `https://github.com/TON-COMPTE/cuistot-recettes.git` par le vrai dépôt |
+| Branche                     | `main`                                                                                 |
+| Stack                       | Laravel + React                                                                        |
+| PHP / Node                  | PHP 8.4 / Node 24, à confirmer installés par le bootstrap                              |
+| Gestionnaire de paquets     | **npm**, explicitement ; le starter contient aussi un lockfile pnpm                    |
+| Frontend                    | **Build uniquement**                                                                   |
+| Base                        | PostgreSQL                                                                             |
+| Environnement d'exemple     | `.env.production.example` ; environnement réel `.env`                                  |
+| Arborescence                | Simple : `/home/cuistot-recettes/app`                                                  |
+| Migrations                  | Activées                                                                               |
+| Worker                      | Un worker, queue `database`                                                            |
+| Redis / Horizon / scheduler | Désactivés, aucun besoin actuel                                                        |
+| HTTPS                       | Activé ; renseigner ton vrai e-mail Let’s Encrypt                                      |
 
 Le mode « Node permanent » du générateur attend un serveur React spécifique sous `/frontend/`. Notre rendu Inertia utilise le service SSR décrit plus bas, avec une écoute privée sur `127.0.0.1:13714`.
 

@@ -18,7 +18,7 @@ class ProductionSetupTest extends TestCase
     {
         $this->app['env'] = 'production';
         config(['recipes.editor_email' => 'redaction@recettes.cuistot-club.fr']);
-        $this->seed(DatabaseSeeder::class);
+        $this->artisan('db:seed', ['--class' => DatabaseSeeder::class, '--force' => true])->assertSuccessful();
 
         $this->assertSame(110, Recipe::where('status', 'published')->count());
         $this->assertSame(10, Category::count());

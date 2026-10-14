@@ -3,7 +3,9 @@
     "configuration": {
         "name": "cuistot-recettes",
         "type": "laravel-react",
-        "domains": [{ "name": "recettes.cuistot-club.fr", "role": "application" }],
+        "domains": [
+            { "name": "recettes.cuistot-club.fr", "role": "application" }
+        ],
         "php": "8.4",
         "node": "24",
         "availablePhp": ["8.4"],
@@ -32,8 +34,16 @@
         "uploadSize": 8,
         "phpChildren": 8,
         "hooks": [
-            { "stage": "beforeMigration", "cwd": ".", "argv": ["npm", "run", "build:ssr-only"] },
-            { "stage": "afterStart", "cwd": ".", "argv": ["php", "artisan", "db:seed", "--force"] }
+            {
+                "stage": "beforeMigration",
+                "cwd": ".",
+                "argv": ["npm", "run", "build:ssr-only"]
+            },
+            {
+                "stage": "afterStart",
+                "cwd": ".",
+                "argv": ["php", "artisan", "db:seed", "--force"]
+            }
         ]
     }
 }

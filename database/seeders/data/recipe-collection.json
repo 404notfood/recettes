@@ -558,10 +558,7 @@
         "cook_time": 40,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "economique"
-        ],
+        "tags": ["vegetarien", "economique"],
         "description": "Le dessert d’enfance, crémeux et parfumé à la vanille. Il reste un peu liquide en fin de cuisson et s’épaissit en refroidissant. Comptez 2 heures de réfrigération supplémentaires pour le déguster froid.",
         "ingredients": [
             {
@@ -606,9 +603,7 @@
         "cook_time": 40,
         "servings": 8,
         "difficulty": "avance",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une pâte levée, du beurre demi-sel et une croûte caramélisée. Le temps de préparation inclut environ 2 heures de levée et de repos. Travaillez la pâte fraîche pour garder de belles couches.",
         "ingredients": [
             {
@@ -803,10 +798,7 @@
         "cook_time": 10,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "rapide"],
         "description": "Une entrée toute simple qui fait toujours son effet. Les jaunes deviennent une garniture onctueuse, avec une touche de moutarde et de la ciboulette fraîche.",
         "ingredients": [
             {
@@ -857,10 +849,7 @@
         "cook_time": 30,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "de-saison"
-        ],
+        "tags": ["vegetarien", "de-saison"],
         "description": "Le potimarron et les châtaignes donnent une texture veloutée, relevée par quelques feuilles de sauge. Gardez des morceaux de châtaigne pour apporter du contraste.",
         "ingredients": [
             {
@@ -921,11 +910,7 @@
         "cook_time": 30,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "de-saison"
-        ],
+        "tags": ["vegetarien", "vegan", "de-saison"],
         "description": "Le goût délicat du panais rencontre la douceur de la poire et des noisettes grillées. Un potage original, sans crème, qui se mixe très facilement.",
         "ingredients": [
             {
@@ -991,11 +976,7 @@
         "cook_time": 30,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Une soupe orangée, douce et légèrement épicée. Le gingembre frais et le citron vert réveillent les carottes, tandis que le lait de coco apporte de l’onctuosité.",
         "ingredients": [
             {
@@ -1061,11 +1042,7 @@
         "cook_time": 15,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "vegan", "rapide"],
         "description": "Une soupe verte et fraîche, prête en moins d’une demi-heure avec des petits pois surgelés. La menthe se met à la fin pour préserver son parfum.",
         "ingredients": [
             {
@@ -1121,10 +1098,7 @@
         "cook_time": 30,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan"
-        ],
+        "tags": ["vegetarien", "vegan"],
         "description": "Des champignons bien dorés et une cuillère de miso donnent du caractère à ce velouté. Une soupe sans crème, avec une texture liée par la pomme de terre.",
         "ingredients": [
             {
@@ -1332,11 +1306,7 @@
         "cook_time": 10,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "vegan", "rapide"],
         "description": "Une soupe japonaise légère au tofu et aux algues. Cette version utilise du dashi de kombu, sans poisson. Le miso se délaye hors du feu pour garder toute sa saveur.",
         "ingredients": [
             {
@@ -1381,9 +1351,7 @@
         "cook_time": 25,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "economique"
-        ],
+        "tags": ["economique"],
         "description": "Des triangles de riz japonais, garnis de thon et entourés d’une bande de nori. Le riz doit être encore tiède pour être façonné ; comptez deux onigiri par personne.",
         "ingredients": [
             {
@@ -1440,9 +1408,7 @@
         "cook_time": 35,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Un curry japonais doux, épais et légèrement sucré, servi sur du riz. Choisissez un roux de curry sans viande ni poisson pour conserver cette version végétarienne.",
         "ingredients": [
             {
@@ -1514,9 +1480,7 @@
         "cook_time": 25,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une salade complète avec des lentilles vertes, de la betterave et du chèvre frais. Elle se sert tiède ou froide, avec une vinaigrette à la moutarde et des noix.",
         "ingredients": [
             {
@@ -1586,12 +1550,7 @@
         "cook_time": 15,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "rapide",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "rapide", "economique"],
         "description": "Une salade de céréales généreuse, avec du croquant, beaucoup d’herbes et une sauce citronnée. Pratique à préparer pour un déjeuner à emporter.",
         "ingredients": [
             {
@@ -1661,11 +1620,7 @@
         "cook_time": 0,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide",
-            "de-saison"
-        ],
+        "tags": ["vegetarien", "rapide", "de-saison"],
         "description": "Le croquant des endives, la douceur de la pomme et le caractère du comté. Une salade de saison qui se prépare sans cuisson.",
         "ingredients": [
             {
@@ -1730,9 +1685,7 @@
         "cook_time": 10,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "rapide"
-        ],
+        "tags": ["rapide"],
         "description": "Une assiette ensoleillée de tomates, œufs, thon, anchois et olives. Cette version maison met les légumes crus à l’honneur, avec une vinaigrette à l’huile d’olive.",
         "ingredients": [
             {
@@ -1934,9 +1887,7 @@
         "cook_time": 80,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des pommes de terre très fines, de la crème, du lait et de l’ail. Un gratin dauphinois sans fromage, à laisser cuire doucement pour obtenir des tranches fondantes.",
         "ingredients": [
             {
@@ -2136,9 +2087,7 @@
         "cook_time": 40,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "economique"
-        ],
+        "tags": ["economique"],
         "description": "Du bœuf, des haricots rouges et une sauce tomate au cumin. Le piment reste facultatif : chacun peut relever son assiette à table.",
         "ingredients": [
             {
@@ -2214,11 +2163,7 @@
         "cook_time": 45,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "de-saison"
-        ],
+        "tags": ["vegetarien", "vegan", "de-saison"],
         "description": "Aubergines, courgettes, poivrons et tomates mijotent avec de l’ail et du thym. Faites d’abord dorer les légumes pour garder du goût et de la texture.",
         "ingredients": [
             {
@@ -2284,11 +2229,7 @@
         "cook_time": 25,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Un mijoté de lentilles corail onctueux, au curry et au lait de coco. Le citron apporte une touche fraîche à la fin.",
         "ingredients": [
             {
@@ -2364,11 +2305,7 @@
         "cook_time": 25,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Un curry rapide avec des pois chiches déjà cuits, une sauce tomate au coco et des épinards ajoutés en fin de cuisson.",
         "ingredients": [
             {
@@ -2434,9 +2371,7 @@
         "cook_time": 30,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Du riz crémeux, des champignons dorés et une finition au beurre et au fromage. Le bouillon chaud s’ajoute progressivement, sans noyer le riz.",
         "ingredients": [
             {
@@ -2502,11 +2437,7 @@
         "cook_time": 25,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Des boulettes de pois chiches aux herbes, dorées au four. Utilisez des pois chiches secs trempés, pas des pois chiches en boîte. Les 8 heures de trempage sont incluses dans la préparation.",
         "ingredients": [
             {
@@ -2577,9 +2508,7 @@
         "cook_time": 55,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des couches d’aubergines rôties, de tomate et de fromage fondant. Cette version utilise le four pour précuire les aubergines.",
         "ingredients": [
             {
@@ -2645,10 +2574,7 @@
         "cook_time": 45,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan"
-        ],
+        "tags": ["vegetarien", "vegan"],
         "description": "Des poivrons rôtis et une farce au quinoa, aux courgettes et à la tomate. Servez deux demi-poivrons par personne.",
         "ingredients": [
             {
@@ -2709,10 +2635,7 @@
         "cook_time": 25,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "economique"
-        ],
+        "tags": ["vegetarien", "economique"],
         "description": "Une pâte souple pour environ trois crêpes par personne. Le repos de 30 minutes est inclus dans la préparation. Laissez la pâte non sucrée pour pouvoir choisir une garniture salée ou sucrée.",
         "ingredients": [
             {
@@ -2763,9 +2686,7 @@
         "cook_time": 45,
         "servings": 6,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des pommes caramélisées sous une pâte croustillante, puis une tarte retournée au service. Utilisez un moule métallique compatible avec la cuisson sur plaque, ou préparez le caramel à part.",
         "ingredients": [
             {
@@ -2816,10 +2737,7 @@
         "cook_time": 35,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "economique"
-        ],
+        "tags": ["vegetarien", "economique"],
         "description": "Des pommes fondantes sous des miettes croustillantes. Un dessert simple, à servir encore tiède à la cuillère.",
         "ingredients": [
             {
@@ -2875,9 +2793,7 @@
         "cook_time": 5,
         "servings": 6,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une mousse légère montée à la crème, sans œufs crus. Le temps de préparation comprend 3 heures au frais. La crème doit être bien froide pour monter.",
         "ingredients": [
             {
@@ -2918,9 +2834,7 @@
         "cook_time": 45,
         "servings": 6,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une crème vanillée sous une fine croûte de caramel. Prévoyez 1 heure de refroidissement et 3 heures au réfrigérateur, incluses dans le temps de préparation.",
         "ingredients": [
             {
@@ -2967,10 +2881,7 @@
         "cook_time": 12,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "rapide"],
         "description": "Quatre petits fondants au chocolat, à servir tièdes. Surveillez la cuisson : les bords se tiennent, tandis que le centre reste très tendre.",
         "ingredients": [
             {
@@ -3021,9 +2932,7 @@
         "cook_time": 55,
         "servings": 8,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Un cheesecake cuit au four avec une base biscuitée et une garniture au citron. Le temps de préparation comprend 1 heure de refroidissement et 4 heures au frais.",
         "ingredients": [
             {
@@ -3080,10 +2989,7 @@
         "cook_time": 20,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "rapide"],
         "description": "De petits pancakes épais, dorés à la poêle. Comptez environ trois pancakes par personne et servez-les avec des fruits ou du sirop d’érable.",
         "ingredients": [
             {
@@ -3139,9 +3045,7 @@
         "cook_time": 20,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des gaufres dorées à l’extérieur et souples au centre. Laissez-les quelques instants sur une grille pour éviter que la vapeur ramollisse la croûte.",
         "ingredients": [
             {
@@ -3197,10 +3101,7 @@
         "cook_time": 25,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan"
-        ],
+        "tags": ["vegetarien", "vegan"],
         "description": "Un granola croustillant pour accompagner un yaourt ou du lait. Le temps de préparation inclut 10 minutes de refroidissement ; il devient croquant en refroidissant.",
         "ingredients": [
             {
@@ -3256,11 +3157,7 @@
         "cook_time": 10,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide",
-            "economique"
-        ],
+        "tags": ["vegetarien", "rapide", "economique"],
         "description": "Un bol d’avoine crémeux, avec des pommes poêlées et une touche de cannelle. Ajustez la quantité de lait pour obtenir la texture que vous aimez.",
         "ingredients": [
             {
@@ -3381,10 +3278,7 @@
         "cook_time": 30,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "economique"
-        ],
+        "tags": ["vegetarien", "economique"],
         "description": "Des œufs cuits dans une sauce tomate et poivron au cumin. Un brunch salé à partager directement dans la poêle, avec du pain.",
         "ingredients": [
             {
@@ -3455,10 +3349,7 @@
         "cook_time": 8,
         "servings": 2,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "rapide"],
         "description": "Du pain grillé, de l’avocat citronné et un œuf mollet. Une tartine salée prête le temps de faire cuire les œufs.",
         "ingredients": [
             {
@@ -3513,9 +3404,7 @@
         "cook_time": 18,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "De petits pains rapides, sans levure boulangère, à ouvrir encore tièdes. Pour des scones tendres, travaillez la pâte juste assez pour la rassembler.",
         "ingredients": [
             {
@@ -3566,9 +3455,7 @@
         "cook_time": 25,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des muffins moelleux, garnis de myrtilles fraîches ou surgelées. Remplissez les moules aux trois quarts pour leur laisser de la place.",
         "ingredients": [
             {
@@ -3629,11 +3516,7 @@
         "cook_time": 35,
         "servings": 8,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Un pain blanc à la mie souple et à la croûte dorée. Le temps de préparation inclut les deux levées, environ 1 h 45 au total, et 20 minutes de refroidissement.",
         "ingredients": [
             {
@@ -3675,11 +3558,7 @@
         "cook_time": 25,
         "servings": 6,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Trois baguettes pour la quantité de base. Cette version à la levure se prépare dans la journée ; le temps de préparation comprend les levées et un court refroidissement.",
         "ingredients": [
             {
@@ -3721,9 +3600,7 @@
         "cook_time": 30,
         "servings": 6,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une brioche au beurre, souple et parfumée, à préparer sans se presser. La préparation inclut 1 h 30 de première levée, 1 heure au frais, 1 heure de seconde levée et le refroidissement.",
         "ingredients": [
             {
@@ -3785,11 +3662,7 @@
         "cook_time": 40,
         "servings": 8,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Un pain complet adouci par un peu de farine blanche et d’huile. Les levées et 20 minutes de refroidissement sont incluses dans la préparation.",
         "ingredients": [
             {
@@ -3845,11 +3718,7 @@
         "cook_time": 40,
         "servings": 8,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Un pain mêlant blé et seigle, avec une petite touche de carvi. Cette version à la levure garde une mie plus souple qu’un pain entièrement au seigle. Les levées et le refroidissement sont inclus.",
         "ingredients": [
             {
@@ -3900,10 +3769,7 @@
         "cook_time": 25,
         "servings": 8,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "vegan"
-        ],
+        "tags": ["vegetarien", "vegan"],
         "description": "Une pâte bien hydratée, de l’huile d’olive et du romarin. Le temps de préparation inclut 2 heures de levée et un court refroidissement. La pâte collante se manipule avec des mains huilées.",
         "ingredients": [
             {
@@ -3959,9 +3825,7 @@
         "cook_time": 18,
         "servings": 6,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des petits pains tendres pour le goûter ou le petit-déjeuner. La préparation inclut environ 1 h 45 de levée et le refroidissement.",
         "ingredients": [
             {
@@ -4018,11 +3882,7 @@
         "cook_time": 12,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Des pains plats qui gonflent au four très chaud. Comptez deux petits pains par personne. La levée et la détente sont incluses dans le temps de préparation.",
         "ingredients": [
             {
@@ -4069,9 +3929,7 @@
         "cook_time": 18,
         "servings": 8,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des buns souples au sésame, faits avec du lait et un peu de beurre. Le temps de préparation comprend les levées et environ 20 minutes de refroidissement.",
         "ingredients": [
             {
@@ -4138,11 +3996,7 @@
         "cook_time": 35,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "De la semoule légère, des légumes mijotés aux épices et des pois chiches. Un grand plat végétal qui se sert avec son bouillon parfumé.",
         "ingredients": [
             {
@@ -4376,10 +4230,7 @@
         "cook_time": 45,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "economique"
-        ],
+        "tags": ["vegetarien", "economique"],
         "description": "Des oignons doucement dorés, du bouillon et une tranche de pain gratinée. Une soupe généreuse à servir dans des bols compatibles avec le four.",
         "ingredients": [
             {
@@ -4445,11 +4296,7 @@
         "cook_time": 20,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide",
-            "economique"
-        ],
+        "tags": ["vegetarien", "rapide", "economique"],
         "description": "Une soupe verte et douce, liée avec un peu de fromage frais. La pomme de terre lui donne de la tenue sans devoir ajouter beaucoup de crème.",
         "ingredients": [
             {
@@ -4504,11 +4351,7 @@
         "cook_time": 40,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "de-saison"
-        ],
+        "tags": ["vegetarien", "vegan", "de-saison"],
         "description": "Des tomates rôties avec de l’ail et de l’oignon, puis mixées en soupe. Choisissez des tomates mûres pour obtenir une saveur douce et bien parfumée.",
         "ingredients": [
             {
@@ -4564,11 +4407,7 @@
         "cook_time": 35,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Une soupe italienne généreuse aux légumes, haricots blancs et petites pâtes. Ajoutez les pâtes à la fin pour qu’elles gardent leur texture.",
         "ingredients": [
             {
@@ -4644,10 +4483,7 @@
         "cook_time": 25,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan"
-        ],
+        "tags": ["vegetarien", "vegan"],
         "description": "Un velouté clair au chou-fleur et au lait de coco, relevé par un peu de curry. La pomme de terre aide à obtenir une texture très lisse.",
         "ingredients": [
             {
@@ -4707,10 +4543,7 @@
         "cook_time": 15,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "rapide"],
         "description": "Des nouilles sautées au chou, à la carotte et aux champignons. Une sauce sucrée-salée les enrobe en quelques minutes, dans une grande poêle bien chaude.",
         "ingredients": [
             {
@@ -4781,9 +4614,7 @@
         "cook_time": 20,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des galettes japonaises au chou, avec une sauce maison et une finition à la mayonnaise. Une version accessible à préparer dans une poêle couverte.",
         "ingredients": [
             {
@@ -4869,10 +4700,7 @@
         "cook_time": 10,
         "servings": 2,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "rapide"],
         "description": "Une omelette légèrement sucrée, cuite en fines couches et roulée. Une petite poêle ronde convient aussi si vous n’avez pas de poêle rectangulaire.",
         "ingredients": [
             {
@@ -5005,10 +4833,7 @@
         "cook_time": 30,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan"
-        ],
+        "tags": ["vegetarien", "vegan"],
         "description": "Des demi-aubergines fondantes, nappées d’un glaçage au miso et au mirin. Le miso étant salé, goûtez avant d’ajouter du sel.",
         "ingredients": [
             {
@@ -5064,11 +4889,7 @@
         "cook_time": 0,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide",
-            "de-saison"
-        ],
+        "tags": ["vegetarien", "rapide", "de-saison"],
         "description": "Tomates mûres, concombre, olives et feta dans une grande assiette. Une salade grecque simple, avec de l’origan et de l’huile d’olive.",
         "ingredients": [
             {
@@ -5209,10 +5030,7 @@
         "cook_time": 15,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan"
-        ],
+        "tags": ["vegetarien", "vegan"],
         "description": "Une salade de quinoa aux notes fruitées, avec de l’avocat et du citron vert. Ajoutez l’avocat au dernier moment pour garder une belle texture.",
         "ingredients": [
             {
@@ -5272,10 +5090,7 @@
         "cook_time": 12,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide"
-        ],
+        "tags": ["vegetarien", "rapide"],
         "description": "Des pâtes froides, du pesto, des tomates cerises et de la mozzarella. Réservez un peu d’eau de cuisson pour que le pesto enrobe bien les pâtes.",
         "ingredients": [
             {
@@ -5331,10 +5146,7 @@
         "cook_time": 25,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "economique"
-        ],
+        "tags": ["vegetarien", "economique"],
         "description": "Une salade de pommes de terre, d’œufs durs et de cornichons, liée avec une sauce au yaourt et à la moutarde. Elle se sert tiède ou froide.",
         "ingredients": [
             {
@@ -5405,11 +5217,7 @@
         "cook_time": 0,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "rapide",
-            "de-saison"
-        ],
+        "tags": ["vegetarien", "rapide", "de-saison"],
         "description": "Une entrée fraîche à préparer avec des tomates bien mûres et une mozzarella égouttée. Quelques feuilles de basilic suffisent pour parfumer l’ensemble.",
         "ingredients": [
             {
@@ -5454,12 +5262,7 @@
         "cook_time": 0,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "rapide",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "rapide", "economique"],
         "description": "Un houmous souple aux pois chiches, au tahini et au citron. Mixez longuement et ajoutez l’eau petit à petit pour régler sa texture.",
         "ingredients": [
             {
@@ -5519,9 +5322,7 @@
         "cook_time": 0,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Un mélange de yaourt épais, de concombre et d’ail, à servir frais. La préparation inclut 15 minutes d’égouttage du concombre.",
         "ingredients": [
             {
@@ -5576,9 +5377,7 @@
         "cook_time": 0,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "rapide"
-        ],
+        "tags": ["rapide"],
         "description": "Une tapenade aux olives noires, aux câpres et aux anchois. Mixez par petites impulsions pour garder une texture agréable à tartiner.",
         "ingredients": [
             {
@@ -5633,12 +5432,7 @@
         "cook_time": 5,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "rapide",
-            "de-saison"
-        ],
+        "tags": ["vegetarien", "vegan", "rapide", "de-saison"],
         "description": "Du pain grillé frotté à l’ail, des tomates en dés et du basilic. Assemblez juste avant de servir pour que les tartines restent croustillantes.",
         "ingredients": [
             {
@@ -5688,9 +5482,7 @@
         "cook_time": 20,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des petits feuilletés ouverts au chèvre, avec une touche de miel et de thym. Ils se servent en entrée ou à partager à l’apéritif.",
         "ingredients": [
             {
@@ -5740,9 +5532,7 @@
         "cook_time": 20,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "De gros champignons garnis d’une farce au fromage frais, à l’ail et au persil. Une entrée chaude qui peut aussi accompagner un plat.",
         "ingredients": [
             {
@@ -5797,10 +5587,7 @@
         "cook_time": 40,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan"
-        ],
+        "tags": ["vegetarien", "vegan"],
         "description": "Des artichauts cuits à l’eau, à effeuiller avec une vinaigrette à la moutarde. Le temps de cuisson varie selon leur taille.",
         "ingredients": [
             {
@@ -5851,12 +5638,7 @@
         "cook_time": 0,
         "servings": 4,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "rapide",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "rapide", "economique"],
         "description": "Une entrée croquante aux carottes, avec une vinaigrette citronnée au cumin. Simple à préparer et facile à emporter.",
         "ingredients": [
             {
@@ -5906,9 +5688,7 @@
         "cook_time": 30,
         "servings": 6,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des petites bouchées soufflées au comté, préparées avec une pâte à choux. Gardez le four fermé pendant la première partie de la cuisson.",
         "ingredients": [
             {
@@ -5964,9 +5744,7 @@
         "cook_time": 0,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une pâte sablée crue pour les tartes sucrées et les petits sablés. Le repos de 1 heure au frais est inclus ; la cuisson dépend ensuite de la recette choisie.",
         "ingredients": [
             {
@@ -6012,9 +5790,7 @@
         "cook_time": 0,
         "servings": 8,
         "difficulty": "avance",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une pâte feuilletée crue avec six tours simples. Prévoyez environ 2 h 30 de repos au réfrigérateur, incluses dans la préparation. La cuisson se fait ensuite dans la recette qui utilise cette pâte.",
         "ingredients": [
             {
@@ -6068,9 +5844,7 @@
         "cook_time": 0,
         "servings": 6,
         "difficulty": "facile",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une pâte brisée crue pour les quiches et les tartes. Elle repose 30 minutes au frais avant d’être étalée ; ce repos est inclus dans la préparation.",
         "ingredients": [
             {
@@ -6110,11 +5884,7 @@
         "cook_time": 0,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien",
-            "vegan",
-            "economique"
-        ],
+        "tags": ["vegetarien", "vegan", "economique"],
         "description": "Une pâte crue pour deux pizzas moyennes. Le temps de préparation comprend environ 1 h 45 de levée et de détente. La cuisson dépend du four et de la garniture.",
         "ingredients": [
             {
@@ -6160,9 +5930,7 @@
         "cook_time": 3,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Une pâte aux œufs pour fabriquer des tagliatelles ou d’autres pâtes fraîches. La préparation inclut 30 minutes de repos. La cuisson indiquée correspond à des tagliatelles fines.",
         "ingredients": [
             {
@@ -6204,9 +5972,7 @@
         "cook_time": 5,
         "servings": 8,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "La base pour les choux, les éclairs, les chouquettes et les gougères. Cette fiche prépare la pâte, avec sa cuisson à la casserole ; la cuisson au four se fait ensuite dans la recette choisie.",
         "ingredients": [
             {
@@ -6258,9 +6024,7 @@
         "cook_time": 15,
         "servings": 6,
         "difficulty": "avance",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des coques au cacao et une ganache au chocolat. La préparation comprend le croûtage, le refroidissement et 12 heures de maturation au frais. Pesez les ingrédients avec précision.",
         "ingredients": [
             {
@@ -6319,9 +6083,7 @@
         "cook_time": 30,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des petits choux légers recouverts de sucre perlé. La pâte est d’abord desséchée à la casserole, puis cuite sans ouvrir le four au début.",
         "ingredients": [
             {
@@ -6378,9 +6140,7 @@
         "cook_time": 40,
         "servings": 6,
         "difficulty": "avance",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des éclairs garnis de crème pâtissière au chocolat et nappés d’un glaçage souple. Le temps de préparation inclut le refroidissement de la crème et des coques.",
         "ingredients": [
             {
@@ -6469,9 +6229,7 @@
         "cook_time": 35,
         "servings": 4,
         "difficulty": "moyen",
-        "tags": [
-            "vegetarien"
-        ],
+        "tags": ["vegetarien"],
         "description": "Des petits choux garnis de glace à la vanille et nappés de chocolat chaud. La préparation comprend le refroidissement des choux ; assemblez juste avant de servir.",
         "ingredients": [
             {

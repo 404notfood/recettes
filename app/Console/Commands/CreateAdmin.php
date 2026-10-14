@@ -15,8 +15,10 @@ class CreateAdmin extends Command
 
     public function handle(): int
     {
-        $email = Str::lower(trim((string) $this->argument('email')));
-        $name = trim((string) $this->option('name'));
+        $emailArgument = $this->argument('email');
+        $nameOption = $this->option('name');
+        $email = is_string($emailArgument) ? Str::lower(trim($emailArgument)) : '';
+        $name = is_string($nameOption) ? trim($nameOption) : '';
         $validator = Validator::make(compact('email', 'name'), ['email' => ['required', 'email', 'max:255', 'unique:users,email'], 'name' => ['required', 'string', 'max:255']]);
         if ($validator->fails()) {
             $this->error('Adresse invalide, compte déjà existant ou nom invalide. Aucun compte modifié.');
