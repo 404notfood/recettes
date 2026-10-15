@@ -1,0 +1,39 @@
+<!doctype html>
+<html lang="fr">
+    <head>
+        <meta charset="utf-8" />
+        <title>Vérifier le transfert</title>
+        <link rel="stylesheet" href="style.css" />
+    </head>
+    <body>
+        <h1>Vérifier mon panier drive</h1>
+        <p id="store"></p>
+        <p>
+            Les quantités ci-dessous seront ajoutées au panier existant.
+            Vérifiez les références et le nombre de paquets. Le paiement se fera
+            sur le site de l’enseigne.
+        </p>
+        <table>
+            <thead>
+                <tr>
+                    <th>Produit</th>
+                    <th>Paquets</th>
+                    <th>Estimation</th>
+                </tr>
+            </thead>
+            <tbody id="lines"></tbody>
+        </table>
+        <p class="muted">
+            Hors frais, consignes et avantages fidélité. Les prix et
+            disponibilités sont vérifiés avant chaque ajout. Un changement de
+            magasin ou de prix interrompt le transfert.
+        </p>
+        <button id="confirm" disabled>Confirmer l’ajout au panier</button>
+        <button id="cancel" class="secondary">Annuler</button>
+        <p id="status" role="status" aria-live="polite"></p>
+        <a id="retailer" target="_blank" rel="noopener noreferrer"
+            >Ouvrir le drive</a
+        >
+        <script src="review.js" type="module"></script>
+    </body>
+</html>

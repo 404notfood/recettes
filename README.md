@@ -47,6 +47,10 @@ Les fiches comprennent les ingrédients avec quantités adaptables, les cases à
 
 Les images envoyées sont limitées à 5 Mo et converties en WebP, avec une dimension maximale de sortie de 1600 px. Les SVG ne sont pas acceptés dans les téléversements. Les propositions disposent d’une limitation de fréquence et d’un champ piège anti-spam.
 
+## Les drives
+
+Depuis la liste de courses d'un planning complet, **Comparer mes drives** ouvre une première intégration expérimentale pour E.Leclerc, Carrefour et Intermarché, sans Jow. La connexion passe par une extension Chrome/Edge et les sessions ouvertes sur les drives ; les mots de passe marchands ne sont pas stockés sur le site. Les produits et quantités sont sélectionnés avant une confirmation du transfert dans l'extension. Les connecteurs n'ont pas encore été validés sur des comptes réels. Installation, limites et validation : [docs/DRIVES.md](docs/DRIVES.md).
+
 ## Référencement
 
 Le SSR est configuré via le plugin Inertia. En production, maintenir le processus Node SSR actif sous supervision (systemd ou Supervisor). Son écoute est limitée à `127.0.0.1`.

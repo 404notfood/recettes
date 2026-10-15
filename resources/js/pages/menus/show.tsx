@@ -397,6 +397,14 @@ export default function MenuShow({
                             </div>
                             <ShoppingBasket size={32} />
                         </div>
+                        {plan.status === 'ready' && (
+                            <Link
+                                href={`/menus/${plan.id}/drives`}
+                                className="drive-entry-link"
+                            >
+                                <ShoppingBasket size={16} /> Comparer mes drives
+                            </Link>
+                        )}
                         <div className="menu-shopping-grid">
                             {shoppingCategories.map((group) => (
                                 <section

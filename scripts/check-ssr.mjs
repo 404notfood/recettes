@@ -33,6 +33,13 @@ const fixtures = {
     },
     'menus/show': { plan, shoppingCategories: [] },
     'menus/recipe': { plan, recipe },
+    'menus/drives': {
+        plan,
+        items: [
+            { id: 'carotte', name: 'Carottes', quantity: 600, unit: 'g' },
+            { id: 'riz', name: 'Riz', quantity: 300, unit: 'g' },
+        ],
+    },
 };
 
 for (const [component, props] of Object.entries(fixtures)) {

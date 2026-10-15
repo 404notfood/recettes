@@ -1,0 +1,197 @@
+.drive-page {
+    padding-bottom: 5rem;
+}
+.drive-entry-link {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding: 0.75rem 1.2rem;
+    border-radius: 999px;
+    color: white;
+    background: #53623c;
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.drive-setup {
+    display: grid;
+    grid-template-columns: 1.3fr 1fr;
+    gap: 2rem;
+    padding: 2rem;
+    border: 1px solid #dfdfd0;
+    background: #f5f2e9;
+    border-radius: 20px;
+    margin-bottom: 2rem;
+}
+.drive-setup h2,
+.drive-store h2 {
+    font:
+        1.5rem 'DM Serif Display',
+        serif;
+    margin: 0.4rem 0 0.7rem;
+}
+.drive-setup p {
+    line-height: 1.7;
+}
+.drive-install {
+    display: flex;
+    flex-direction: column;
+    align-items: start;
+    gap: 1rem;
+}
+.drive-install ol {
+    list-style: decimal;
+    padding-left: 1.5rem;
+    font-size: 0.9rem;
+}
+.drive-install li {
+    margin: 0.6rem 0;
+}
+.drive-install summary {
+    cursor: pointer;
+    font-weight: 600;
+}
+.drive-download,
+.drive-store > a {
+    display: inline-flex;
+    align-items: center;
+    gap: 0.4rem;
+    color: #53623c;
+    text-decoration: underline;
+    text-underline-offset: 4px;
+}
+.drive-note {
+    font-size: 0.8rem;
+    color: #6b6d60;
+    line-height: 1.6;
+    margin: 0.6rem 0;
+}
+.drive-alert {
+    background: #fff1e9;
+    border: 1px solid #e5b098;
+    padding: 1rem;
+    border-radius: 12px;
+    margin-bottom: 1rem;
+}
+.drive-stores,
+.drive-options {
+    display: grid;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 1rem;
+}
+.drive-store {
+    border: 1px solid #e5e0d5;
+    border-radius: 15px;
+    padding: 1.3rem;
+    background: #fffdfa;
+}
+.drive-page label:not(.drive-ingredient) {
+    display: flex;
+    flex-direction: column;
+    gap: 0.4rem;
+    font-size: 0.8rem;
+    margin-top: 0.8rem;
+}
+.drive-page input:not([type='checkbox']),
+.drive-page select {
+    width: 100%;
+    padding: 0.6rem;
+    border: 1px solid #d5d7c9;
+    border-radius: 7px;
+    background: white;
+    font-size: 0.85rem;
+    min-height: 40px;
+}
+.drive-page select {
+    text-overflow: ellipsis;
+}
+.drive-list {
+    margin-top: 3rem;
+}
+.drive-item {
+    border-top: 1px solid #dfdfd2;
+    padding: 1.5rem 0;
+}
+.drive-ingredient {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 0.7rem;
+}
+.drive-ingredient input {
+    width: 18px;
+    height: 18px;
+    accent-color: #54623c;
+}
+.drive-ingredient span {
+    color: #6b6d60;
+    font-size: 0.85rem;
+}
+.drive-options {
+    margin-top: 1rem;
+}
+.drive-option {
+    padding: 1rem;
+    background: #f5f2e9;
+    border-radius: 12px;
+    min-width: 0;
+}
+.drive-option h3 {
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+}
+.drive-search {
+    display: flex;
+    align-items: center;
+    gap: 0.4rem;
+}
+.drive-search input {
+    min-width: 0;
+}
+.drive-product {
+    margin-top: 0.8rem;
+    line-height: 1.6;
+}
+.drive-product p {
+    font-size: 0.9rem;
+    font-weight: 600;
+}
+.drive-product > span {
+    font-size: 0.8rem;
+}
+.drive-product input {
+    max-width: 100px;
+}
+.drive-total {
+    display: block;
+    font:
+        2rem 'DM Serif Display',
+        serif;
+    color: #4e603a;
+}
+.drive-totals {
+    margin: 2rem 0 1rem;
+}
+.drive-totals button {
+    margin-top: 1rem;
+}
+.drive-transfer {
+    padding: 1.4rem;
+    background: #edf1e4;
+    border-radius: 12px;
+    margin-top: 1.5rem;
+}
+.drive-transfer p {
+    margin-bottom: 0.8rem;
+}
+@media (max-width: 900px) {
+    .drive-setup {
+        grid-template-columns: 1fr;
+        gap: 1rem;
+        padding: 1.3rem;
+    }
+    .drive-stores,
+    .drive-options {
+        grid-template-columns: 1fr;
+    }
+}

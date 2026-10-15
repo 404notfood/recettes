@@ -13,7 +13,12 @@ const ssr = JSON.parse(
 );
 const entry = readFileSync(resolve(ssrRoot, 'app.js'), 'utf8');
 
-for (const name of ['menus/index', 'menus/show', 'menus/recipe']) {
+for (const name of [
+    'menus/index',
+    'menus/show',
+    'menus/recipe',
+    'menus/drives',
+]) {
     const source = `resources/js/pages/${name}.tsx`;
     if (
         !client[source] ||
@@ -35,5 +40,5 @@ for (const name of ['menus/index', 'menus/show', 'menus/recipe']) {
     }
 }
 console.log(
-    'Build navigateur et SSR vérifié : les trois pages des menus sont présentes.',
+    'Build navigateur et SSR vérifié : les pages des menus et des drives sont présentes.',
 );
