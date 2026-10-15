@@ -34,6 +34,8 @@ php artisan queue:restart
 composer menus:work
 ```
 
+`npm run build` et `npm run build:ssr` produisent tous deux les bundles navigateur et SSR et vérifient que les pages des menus sont incluses. Après recompilation, redémarrer le processus SSR selon son mode de supervision. `npm run check:ssr` vérifie le rendu des trois pages dans le processus actif.
+
 Le worker dédié écoute la connexion `menus`, la file `menus`, avec une seule tentative, un timeout de 3600 secondes et une réservation de 3700 secondes. En production, le superviser séparément du worker par défaut. Sans clé, seules les combinaisons réalisables avec les recettes existantes peuvent aboutir ; le planning explique quand des recettes supplémentaires sont nécessaires.
 
 Le modèle `deploy/menus-worker.service.template` permet de créer ce service sur le VPS, en remplaçant `__PROJECT__` par `cuistot-recettes` et `__PHP__` par le chemin du PHP installé. L'installer sous un nom distinct, par exemple `cuistot-recettes-menus.service`. Aucun déploiement du VPS n'est effectué par l'intégration locale.

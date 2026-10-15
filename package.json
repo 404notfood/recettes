@@ -3,13 +3,15 @@
     "private": true,
     "type": "module",
     "scripts": {
-        "build": "vp build",
-        "build:ssr": "vp build && vp build --ssr",
-        "build:ssr-only": "vp build --ssr",
+        "build": "vp build && vp build --ssr && node scripts/verify-build.mjs",
+        "build:client": "vp build",
+        "build:ssr": "npm run build",
+        "build:ssr-only": "vp build --ssr && node scripts/verify-build.mjs",
         "dev": "vp dev",
         "check": "vp check",
         "check:fix": "vp check --fix",
-        "types:check": "tsc --noEmit"
+        "types:check": "tsc --noEmit",
+        "check:ssr": "node scripts/check-ssr.mjs"
     },
     "dependencies": {
         "@inertiajs/react": "^3.0.0",

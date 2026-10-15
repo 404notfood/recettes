@@ -122,6 +122,24 @@ sudo systemctl restart cuistot-recettes-ssr
 
 ## 6. Contrôler puis mettre à jour
 
+`npm run build` compile maintenant les assets du navigateur **et** le bundle SSR, puis vérifie la présence des trois pages des menus et de leurs fichiers compilés. `npm run build:ssr` reste un alias de cette compilation complète. Ne pas déployer uniquement `public/build` : le dossier `bootstrap/ssr` appartient à la même version.
+
+Une erreur `Page not found: menus/show` indique que le processus SSR ne dispose pas de la page des menus. Compiler les deux bundles puis redémarrer le SSR : le processus Node conserve les modules chargés avant la recompilation.
+
+Sur l'installation Hestia utilisant le chemin fourni dans les journaux, depuis le compte `cuistot` :
+
+```bash
+cd /home/cuistot/web/recettes.cuistot-club.fr/public_html/recettes
+npm run build:ssr
+php artisan optimize:clear
+php artisan inertia:stop-ssr
+php artisan inertia:start-ssr
+```
+
+La dernière commande démarre le SSR au premier plan. Si un service systemd, Supervisor ou autre gestionnaire le supervise déjà, redémarrer ce service après compilation à la place du démarrage manuel ; ne pas lancer deux processus sur le même port. Le nom du service dépend de l'installation.
+
+Après installation des scripts de vérification de cette version, `npm run check:ssr` contrôle aussi le processus réellement actif : il demande le rendu de `menus/index`, `menus/show` et `menus/recipe` avec des données fictives, sans accès à la base ni à OpenAI.
+
 Vérifier `/`, `/recettes`, une fiche de recette avec sa photo et son crédit, `/sitemap.xml`, une proposition anonyme et un e-mail de vérification reçu dans une vraie boîte. Compléter les informations de l'éditeur dans la page de confidentialité avant l'ouverture publique.
 
 Contrôle SSR sous le compte projet :
