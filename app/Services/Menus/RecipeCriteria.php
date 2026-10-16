@@ -82,6 +82,15 @@ class RecipeCriteria
             return false;
         }
         if ($recipe->course_type === 'main') {
+            if (filled($recipe->title)) {
+                if (($counts['recipe:'.$this->fingerprint($recipe)] ?? 0) >= 1) {
+                    return false;
+                }
+                $family = $this->family($recipe);
+                if (($counts['family:'.$family] ?? 0) >= max(1, (int) ceil($weekMeals / 7))) {
+                    return false;
+                }
+            }
             $used = $counts[$recipe->protein_source] ?? 0;
             if ($recipe->protein_source === 'red_meat' && $used >= ($weekMeals < 3 ? 1 : 2)) {
                 return false;
@@ -112,5 +121,25 @@ class RecipeCriteria
     public function fingerprint(Recipe $recipe): string
     {
         return Str::lower(Str::ascii(trim($recipe->title)));
+    }
+
+    public function family(Recipe $recipe): string
+    {
+        $title = Str::lower(Str::ascii($recipe->title));
+        foreach ([
+            'couscous' => 'couscous|semoule',
+            'pâtes' => 'pates|spaghetti|penne|macaroni|tagliatelle|coquillette|croziflette|crozets',
+            'risotto' => 'risotto', 'soupe' => 'soupe|potage|veloute|bouillon',
+            'salade' => 'salade', 'gratin' => 'gratin|tartiflette',
+            'omelette' => 'omelette|frittata', 'tarte salée' => 'quiche|tarte',
+            'curry' => 'curry|dahl|dal', 'galette' => 'galette|crepe',
+            'sandwich' => 'sandwich|croque|burger|wrap', 'pizza' => 'pizza',
+        ] as $family => $pattern) {
+            if (preg_match('/\b(?:'.$pattern.')\w*\b/u', $title)) {
+                return $family;
+            }
+        }
+
+        return $this->fingerprint($recipe);
     }
 }

@@ -122,6 +122,22 @@ sudo systemctl restart cuistot-recettes-ssr
 
 ## 6. Contrôler puis mettre à jour
 
+Pour les correctifs des menus, du PDF et des drives du 16 octobre 2026, déployer ensemble le code, les vues, `composer.lock`, les deux builds et le ZIP de l'extension. Sur Hestia, sous le compte `cuistot`, après mise à jour des sources :
+
+```bash
+cd /home/cuistot/web/recettes.cuistot-club.fr/public_html/recettes
+composer install --no-dev --prefer-dist --optimize-autoloader
+php scripts/check-runtime.php
+npm ci
+npm run build:ssr
+php artisan optimize:clear
+php artisan queue:restart
+```
+
+Redémarrer ensuite le service SSR existant et contrôler `npm run check:ssr`. Si le SSR est lancé manuellement, utiliser `php artisan inertia:stop-ssr` puis `php artisan inertia:start-ssr` ; ne pas ajouter un second processus sur le même port. Le worker des menus doit aussi être supervisé pour repartir après `queue:restart`.
+
+L'erreur `Class "Dompdf\\Options" not found` est corrigée par l'installation Composer ci-dessus. La nouvelle impression HTML des menus et des courses fonctionne aussi sans moteur PDF. Pour l'ouverture groupée des trois drives, mettre à jour puis recharger l'extension **0.1.1** depuis le nouveau ZIP et recharger la page du site. Les corrections des courses s'appliquent aux plannings existants ; les règles de choix des recettes s'appliquent lors d'une nouvelle préparation ou d'une régénération des repas libres.
+
 `npm run build` compile maintenant les assets du navigateur **et** le bundle SSR, puis vérifie la présence de l'accueil, des quatre pages des menus et de leurs fichiers compilés. `npm run build:ssr` reste un alias de cette compilation complète. Ne pas déployer uniquement `public/build` : le dossier `bootstrap/ssr` appartient à la même version.
 
 Une erreur `Page not found: menus/show` indique que le processus SSR ne dispose pas de la page des menus. Compiler les deux bundles puis redémarrer le SSR : le processus Node conserve les modules chargés avant la recompilation.

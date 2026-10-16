@@ -23,6 +23,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
     Route::get('/menus/{mealPlan}', [MealPlanController::class, 'show'])->name('menus.show');
     Route::get('/menus/{mealPlan}/drives', [DriveController::class, 'show'])->name('menus.drives');
     Route::get('/menus/{mealPlan}/pdf', [MealPlanController::class, 'export'])->middleware('throttle:15,1')->name('menus.pdf');
+    Route::get('/menus/{mealPlan}/imprimer-planning', [MealPlanController::class, 'export'])->middleware('throttle:15,1')->name('menus.print-plan');
     Route::get('/menus/{mealPlan}/imprimer', [MealPlanController::class, 'printRecipes'])->middleware('throttle:15,1')->name('menus.print');
     Route::get('/menus/{mealPlan}/recettes/{meal}/{course}', [MealPlanController::class, 'recipe'])->name('menus.recipe');
     Route::post('/menus/{mealPlan}/regenerate', [MealPlanController::class, 'regenerate'])->middleware('throttle:5,1')->name('menus.regenerate');

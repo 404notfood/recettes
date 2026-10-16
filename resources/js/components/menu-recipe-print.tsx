@@ -18,7 +18,6 @@ export default function MenuRecipePrint({
     plan: MealPlan;
     disabled: boolean;
 }) {
-    const [selected, setSelected] = useState<Set<string>>(() => new Set());
     const unique = new Map<
         string,
         { key: string; title: string; course: Course }
@@ -36,9 +35,16 @@ export default function MenuRecipePrint({
         }
     }
     const recipes = [...unique.values()];
+    const [selected, setSelected] = useState<Set<string>>(
+        () => new Set(recipes.map((item) => item.key)),
+    );
     const count = recipes.filter((item) => selected.has(item.key)).length;
     return (
-        <Dialog>
+        <Dialog
+            onOpenChange={(open) => {
+                if (open) setSelected(new Set(recipes.map((item) => item.key)));
+            }}
+        >
             <DialogTrigger asChild>
                 <Button className="menu-pill" disabled={disabled}>
                     <Printer size={16} /> Imprimer des recettes

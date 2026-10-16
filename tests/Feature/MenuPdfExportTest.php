@@ -48,6 +48,16 @@ class MenuPdfExportTest extends TestCase
         }
     }
 
+    public function test_planning_can_be_printed_as_html_without_using_the_pdf_engine(): void
+    {
+        $owner = User::factory()->create();
+        $plan = $this->plan($owner);
+        $this->actingAs($owner)->get(route('menus.print-plan', $plan))->assertOk()
+            ->assertSee('Imprimer ou enregistrer en PDF')->assertSee('Carottes râpées au citron')
+            ->assertSee('La liste de courses')->assertSee('1,5 kg');
+        $this->actingAs(User::factory()->create())->get(route('menus.print-plan', $plan))->assertForbidden();
+    }
+
     public function test_default_download_includes_menus_and_courses(): void
     {
         $owner = User::factory()->create();

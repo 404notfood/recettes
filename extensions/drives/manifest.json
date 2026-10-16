@@ -2,7 +2,7 @@
     "manifest_version": 3,
     "name": "Cuistot Club — Mes drives",
     "description": "Préparez les paniers Leclerc, Carrefour et Intermarché depuis les menus Cuistot Club, sans intermédiaire.",
-    "version": "0.1.0",
+    "version": "0.1.1",
     "minimum_chrome_version": "120",
     "permissions": ["activeTab", "scripting", "storage"],
     "host_permissions": [

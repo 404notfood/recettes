@@ -10,7 +10,7 @@
         )
             return;
         if (
-            !['status', 'search', 'prepare', 'job'].includes(
+            !['status', 'open', 'search', 'prepare', 'job'].includes(
                 request.operation,
             ) ||
             typeof request.id !== 'string' ||

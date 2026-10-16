@@ -139,6 +139,9 @@ class MealPlanController extends Controller
         $expected = $mealPlan->days * count($mealPlan->criteria['meals']);
         abort_if(in_array($mealPlan->status, ['queued', 'generating'], true) || $mealPlan->meals->count() !== $expected, 409, 'Le planning doit être complet avant son export.');
         $document = $data['document'] ?? 'full';
+        if ($request->routeIs('menus.print-plan')) {
+            return response($exporter->printable($mealPlan, $document))->header('Cache-Control', 'private, no-store');
+        }
         $prefix = ['full' => 'menus-et-courses', 'menus' => 'menus', 'shopping' => 'liste-de-courses'][$document];
 
         return response($exporter->render($mealPlan, $document), 200, [

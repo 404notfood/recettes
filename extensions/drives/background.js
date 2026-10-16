@@ -45,7 +45,7 @@ async function status() {
         ],
     });
     return {
-        version: '0.1.0',
+        version: '0.1.1',
         tabs: await Promise.all(
             tabs
                 .filter((tab) => retailerFor(tab.url))
@@ -70,6 +70,28 @@ async function status() {
                 }),
         ),
     };
+}
+async function openDrives() {
+    const existing = await chrome.tabs.query({
+        url: [
+            'https://*.leclercdrive.fr/*',
+            'https://www.carrefour.fr/*',
+            'https://www.intermarche.com/*',
+        ],
+    });
+    const tabs = [];
+    for (const [retailer, site] of Object.entries(retailers)) {
+        const found = existing.find(
+            (tab) =>
+                retailerFor(tab.url) === retailer ||
+                new URL(tab.url).hostname === new URL(site.url).hostname,
+        );
+        const tab =
+            found ||
+            (await chrome.tabs.create({ url: site.url, active: false }));
+        tabs.push({ retailer, tabId: tab.id, created: !found });
+    }
+    return { tabs };
 }
 async function search(payload) {
     const { tabId, retailer, query } = payload;
@@ -250,6 +272,7 @@ async function dispatch(message, sender) {
     )
         throw new Error('Reliez ce site depuis l’icône de l’extension.');
     if (message.operation === 'status') return status();
+    if (message.operation === 'open') return openDrives();
     if (message.operation === 'search') return search(message.payload || {});
     if (message.operation === 'prepare') return prepare(message.payload || {});
     if (message.operation === 'job') {

@@ -18,6 +18,10 @@ class ShoppingCategoriesTest extends TestCase
             'Lentilles' => 'legumes', 'Pois chiches' => 'legumes', 'Haricots rouges' => 'legumes',
             'Lait de coco' => 'pantry', 'Beurre de cacahuète' => 'pantry', 'Persil frais' => 'herbs',
             'Produit inconnu' => 'other',
+            'Panais' => 'vegetables', 'Wakamé séché' => 'vegetables', 'Reblochon' => 'dairy',
+            'Crozets' => 'starch', 'Châtaignes déjà cuites' => 'starch', 'Tranches de brioche' => 'starch',
+            'Feuilles de sauge' => 'herbs', 'Sauce soja' => 'pantry', 'Pesto végétarien' => 'pantry',
+            'Dashi de kombu préparé, sans bonite' => 'pantry', 'Mirin' => 'pantry', 'Miso' => 'pantry',
             'Sucre pour le moule' => 'pantry', 'Œufs pour les choux' => 'eggs', 'Chocolat noir pour la crème' => 'pantry',
         ] as $name => $expected) {
             $this->assertSame($expected, $categories->classify($name), $name);

@@ -14,16 +14,23 @@ import {
     createDriveClient,
     euros,
     retailers,
-    type DriveProduct,
     type DriveTab,
     type Retailer,
     type SearchResult,
     type Transfer,
 } from '@/lib/drives';
+import {
+    cheapestSelection,
+    coversNeed,
+    fuelCost,
+    packAmount,
+    validSelection,
+    type ProductSelection,
+} from '@/lib/drive-comparison';
 
 type Item = { id: string; name: string; quantity: number | null; unit: string };
 type Result = SearchResult & { error?: string };
-type Selection = { product: DriveProduct; quantity: string };
+type Selection = ProductSelection;
 const keyFor = (retailer: Retailer, itemId: string) => `${retailer}:${itemId}`;
 
 export default function MenuDrives({
@@ -44,22 +51,63 @@ export default function MenuDrives({
     const [queries, setQueries] = useState<Record<string, string>>({});
     const [busy, setBusy] = useState('');
     const [error, setError] = useState('');
+    const [notice, setNotice] = useState('');
     const [transfer, setTransfer] = useState<Transfer | null>(null);
+    const [fuelPrice, setFuelPrice] = useState('');
+    const [distances, setDistances] = useState<
+        Partial<Record<Retailer, string>>
+    >({});
+    const [progress, setProgress] = useState({ done: 0, total: 0 });
+    const [now, setNow] = useState(() => Date.now());
+    const stopComparison = useRef(false);
     useEffect(() => {
         const connection = createDriveClient();
         client.current = connection;
         return () => {
+            stopComparison.current = true;
             client.current = null;
             connection.dispose();
         };
     }, []);
+    useEffect(() => {
+        const timer = setInterval(() => setNow(Date.now()), 30000);
+        return () => clearInterval(timer);
+    }, []);
     async function request<T>(
-        operation: 'status' | 'search' | 'prepare' | 'job',
+        operation: 'status' | 'open' | 'search' | 'prepare' | 'job',
         payload?: unknown,
     ) {
         if (!client.current)
             throw new Error('Rechargez cette page pour relier l’extension.');
         return client.current.request<T>(operation, payload);
+    }
+    async function openDrives() {
+        setBusy('open');
+        setError('');
+        setNotice('');
+        try {
+            const response = await request<{
+                tabs: { retailer: Retailer; tabId: number }[];
+            }>('open');
+            if (
+                new Set(response.tabs.map((tab) => tab.retailer)).size !==
+                retailers.length
+            )
+                throw new Error(
+                    'Les trois drives n’ont pas pu être ouverts. Utilisez les liens de chaque enseigne ci-dessous.',
+                );
+            setNotice(
+                'Les trois drives sont ouverts. Dans chaque onglet, connectez-vous et choisissez votre magasin, puis revenez ici pour détecter les drives.',
+            );
+        } catch (caught) {
+            setError(
+                caught instanceof Error
+                    ? caught.message
+                    : 'Ouverture interrompue. Utilisez les liens de chaque enseigne.',
+            );
+        } finally {
+            setBusy('');
+        }
     }
     async function detect() {
         setBusy('detect');
@@ -93,6 +141,98 @@ export default function MenuDrives({
             setBusy('');
         }
     }
+    async function lookup(retailer: Retailer, item: Item) {
+        const response = await request<SearchResult>('search', {
+            retailer,
+            tabId: active[retailer],
+            query: queries[keyFor(retailer, item.id)]?.trim() || item.name,
+        });
+        const expected = tabs.find(
+            (tab) =>
+                tab.tabId === active[retailer] && tab.retailer === retailer,
+        )?.store;
+        if (!expected || response.store.id !== expected.id)
+            throw new Error(
+                'Le magasin a changé. Détectez à nouveau vos drives.',
+            );
+        return response;
+    }
+    async function autoFill() {
+        const stores = retailers.filter((retailer) => active[retailer.id]);
+        const needs = items.filter((item) => included.has(item.id));
+        if (!stores.length || !needs.length) return;
+        stopComparison.current = false;
+        setBusy('auto');
+        setError('');
+        setNotice('');
+        setTransfer(null);
+        setProgress({ done: 0, total: stores.length * needs.length });
+        let selectedCount = 0;
+        try {
+            // One stream per shop; the extension paces requests within each shop.
+            await Promise.all(
+                stores.map(async (retailer) => {
+                    for (const item of needs) {
+                        if (stopComparison.current) break;
+                        const key = keyFor(retailer.id, item.id);
+                        setSelections((previous) => {
+                            const next = { ...previous };
+                            delete next[key];
+                            return next;
+                        });
+                        try {
+                            const response = await lookup(retailer.id, item);
+                            if (stopComparison.current) break;
+                            setResults((previous) => ({
+                                ...previous,
+                                [key]: response,
+                            }));
+                            const selection = cheapestSelection(
+                                item,
+                                response.products,
+                                Date.now(),
+                            );
+                            if (selection) {
+                                selectedCount++;
+                                setSelections((previous) => ({
+                                    ...previous,
+                                    [key]: selection,
+                                }));
+                            }
+                        } catch (caught) {
+                            if (stopComparison.current) break;
+                            setResults((previous) => ({
+                                ...previous,
+                                [key]: {
+                                    store: { id: '', name: '', url: '' },
+                                    products: [],
+                                    error:
+                                        caught instanceof Error
+                                            ? caught.message
+                                            : 'Recherche interrompue.',
+                                },
+                            }));
+                        }
+                        setProgress((previous) => ({
+                            ...previous,
+                            done: previous.done + 1,
+                        }));
+                    }
+                }),
+            );
+            if (client.current)
+                setNotice(
+                    stopComparison.current
+                        ? 'Comparaison arrêtée. Les références déjà trouvées sont conservées.'
+                        : `${selectedCount} ligne(s) préremplie(s). Vérifiez les produits, puis complétez les formats ou quantités restés à vérifier.`,
+                );
+        } finally {
+            if (client.current) {
+                setNow(Date.now());
+                setBusy('');
+            }
+        }
+    }
     async function search(retailer: Retailer, item: Item) {
         const key = keyFor(retailer, item.id);
         setBusy(key);
@@ -104,11 +244,8 @@ export default function MenuDrives({
             return next;
         });
         try {
-            const response = await request<SearchResult>('search', {
-                retailer,
-                tabId: active[retailer],
-                query: queries[key]?.trim() || item.name,
-            });
+            const response = await lookup(retailer, item);
+            setNow(Date.now());
             setResults((previous) => ({ ...previous, [key]: response }));
         } catch (caught) {
             const message =
@@ -167,6 +304,34 @@ export default function MenuDrives({
         }
     }
     const selectedItems = items.filter((item) => included.has(item.id));
+    const baskets = retailers.map((retailer) => {
+        const picked = selectedItems
+            .map((item) => selections[keyFor(retailer.id, item.id)])
+            .filter((line) => validSelection(line, now));
+        const total = picked.reduce(
+            (sum, line) =>
+                sum + line.product.priceCents * Number(line.quantity),
+            0,
+        );
+        const complete =
+            selectedItems.length > 0 &&
+            selectedItems.every((item) =>
+                coversNeed(item, selections[keyFor(retailer.id, item.id)], now),
+            );
+        const fuel = fuelCost(distances[retailer.id] ?? '', fuelPrice);
+        return {
+            retailer,
+            picked,
+            total,
+            complete,
+            fuel,
+            combined: complete && fuel !== null ? total + fuel : null,
+        };
+    });
+    const ranked = baskets
+        .filter((basket) => basket.combined !== null)
+        .sort((a, b) => a.combined! - b.combined!);
+    const best = ranked[0];
     return (
         <div className="site-container menu-page drive-page">
             <Head title="Comparer mes drives">
@@ -210,6 +375,12 @@ export default function MenuDrives({
                     </p>
                 </div>
                 <div className="drive-install">
+                    <Button
+                        onClick={() => void openDrives()}
+                        disabled={Boolean(busy)}
+                    >
+                        <ArrowUpRight size={16} /> Ouvrir les 3 drives
+                    </Button>
                     <a
                         href="/downloads/cuistot-drives.zip"
                         className="drive-download"
@@ -254,6 +425,11 @@ export default function MenuDrives({
             {error && (
                 <p className="drive-alert" role="alert">
                     {error}
+                </p>
+            )}
+            {notice && (
+                <p className="drive-note" role="status">
+                    {notice}
                 </p>
             )}
             <section className="drive-stores" aria-label="Mes magasins">
@@ -316,6 +492,47 @@ export default function MenuDrives({
                 })}
             </section>
             <section className="drive-list" aria-labelledby="drive-list-title">
+                <div className="drive-setup">
+                    <div>
+                        <h2>Préremplir au moins cher</h2>
+                        <p>
+                            Recherche dans chaque magasin détecté, puis
+                            sélection du produit compatible au coût le plus bas
+                            pour couvrir la quantité demandée. Les formats
+                            incertains restent à vérifier.
+                        </p>
+                    </div>
+                    <div>
+                        <Button
+                            onClick={() => void autoFill()}
+                            disabled={
+                                Boolean(busy) ||
+                                !selectedItems.length ||
+                                !retailers.some(
+                                    (retailer) => active[retailer.id],
+                                )
+                            }
+                        >
+                            Rechercher et préremplir
+                        </Button>
+                        {busy === 'auto' ? (
+                            <div role="status">
+                                <p>
+                                    {progress.done}/{progress.total} recherches
+                                    terminées
+                                </p>
+                                <Button
+                                    variant="outline"
+                                    onClick={() => {
+                                        stopComparison.current = true;
+                                    }}
+                                >
+                                    Arrêter la comparaison
+                                </Button>
+                            </div>
+                        ) : null}
+                    </div>
+                </div>
                 <div className="menu-weekbar">
                     <div>
                         <span className="menu-eyebrow">DU MENU AU PANIER</span>
@@ -366,6 +583,18 @@ export default function MenuDrives({
                                     const key = keyFor(retailer.id, item.id);
                                     const result = results[key];
                                     const selection = selections[key];
+                                    const amount = selection
+                                        ? packAmount(
+                                              selection.product,
+                                              item.unit,
+                                          )
+                                        : null;
+                                    const underfilled =
+                                        item.quantity !== null &&
+                                        amount !== null &&
+                                        Number(selection?.quantity) > 0 &&
+                                        amount * Number(selection?.quantity) <
+                                            item.quantity;
                                     const label = `${item.name} — ${retailer.name}`;
                                     return (
                                         <div
@@ -381,6 +610,7 @@ export default function MenuDrives({
                                                         item.name
                                                     }
                                                     maxLength={120}
+                                                    disabled={Boolean(busy)}
                                                     onChange={(event) =>
                                                         setQueries(
                                                             (previous) => ({
@@ -552,6 +782,9 @@ export default function MenuDrives({
                                                                         step="1"
                                                                         inputMode="numeric"
                                                                         aria-label={`Nombre de paquets ${label}`}
+                                                                        disabled={Boolean(
+                                                                            busy,
+                                                                        )}
                                                                         value={
                                                                             selection.quantity
                                                                         }
@@ -572,6 +805,7 @@ export default function MenuDrives({
                                                                                             key
                                                                                         ],
                                                                                         quantity,
+                                                                                        confirmed: false,
                                                                                     },
                                                                                 }),
                                                                             );
@@ -581,6 +815,72 @@ export default function MenuDrives({
                                                                         }}
                                                                     />
                                                                 </label>
+                                                                {underfilled ? (
+                                                                    <p className="drive-note">
+                                                                        Quantité
+                                                                        insuffisante
+                                                                        :
+                                                                        augmentez
+                                                                        le
+                                                                        nombre
+                                                                        de
+                                                                        paquets.
+                                                                    </p>
+                                                                ) : !coversNeed(
+                                                                      item,
+                                                                      selection,
+                                                                      now,
+                                                                  ) ||
+                                                                  selection.confirmed ? (
+                                                                    <label className="mt-2 flex items-start gap-2">
+                                                                        <input
+                                                                            type="checkbox"
+                                                                            checked={Boolean(
+                                                                                selection.confirmed,
+                                                                            )}
+                                                                            disabled={
+                                                                                !validSelection(
+                                                                                    selection,
+                                                                                    now,
+                                                                                ) ||
+                                                                                Boolean(
+                                                                                    busy,
+                                                                                )
+                                                                            }
+                                                                            onChange={(
+                                                                                event,
+                                                                            ) => {
+                                                                                const confirmed =
+                                                                                    event
+                                                                                        .target
+                                                                                        .checked;
+                                                                                setSelections(
+                                                                                    (
+                                                                                        previous,
+                                                                                    ) => ({
+                                                                                        ...previous,
+                                                                                        [key]: {
+                                                                                            ...previous[
+                                                                                                key
+                                                                                            ],
+                                                                                            confirmed,
+                                                                                        },
+                                                                                    }),
+                                                                                );
+                                                                                setTransfer(
+                                                                                    null,
+                                                                                );
+                                                                            }}
+                                                                        />{' '}
+                                                                        Produit,
+                                                                        format
+                                                                        et
+                                                                        quantité
+                                                                        vérifiés
+                                                                        pour cet
+                                                                        ingrédient
+                                                                    </label>
+                                                                ) : null}
                                                             </div>
                                                         )}
                                                         <p className="drive-note">
@@ -615,60 +915,117 @@ export default function MenuDrives({
                     </article>
                 ))}
             </section>
+            <section className="drive-setup" aria-label="Calculer le trajet">
+                <div>
+                    <h2>Courses + essence</h2>
+                    <p>
+                        Consommation : 6 L/100 km. Indiquez la distance totale
+                        aller-retour de chaque magasin. Les distances et tarifs
+                        restent dans cette page.
+                    </p>
+                </div>
+                <label>
+                    Carburant (€/L)
+                    <input
+                        className="mt-2 block rounded border p-2"
+                        type="number"
+                        min="0.01"
+                        max="20"
+                        step="0.001"
+                        value={fuelPrice}
+                        onChange={(event) => setFuelPrice(event.target.value)}
+                        placeholder="Prix au litre"
+                    />
+                </label>
+            </section>
+            {best ? (
+                <p className="drive-alert" role="status">
+                    {ranked.length === 1
+                        ? 'Un seul panier complet comparable : '
+                        : 'Le moins cher parmi les paniers complets renseignés : '}
+                    {best.retailer.name} · {euros(best.combined!)} courses et
+                    essence comprises.
+                </p>
+            ) : (
+                <p className="drive-note">
+                    Complétez un panier, son trajet et le prix du carburant pour
+                    calculer le coût total. Les paniers incomplets ne sont pas
+                    classés.
+                </p>
+            )}
             <section
                 className="drive-stores drive-totals"
                 aria-label="Comparer mes paniers"
             >
-                {retailers.map((retailer) => {
-                    const picked = selectedItems
-                        .map((item) => selections[keyFor(retailer.id, item.id)])
-                        .filter(
-                            (line) =>
-                                line &&
-                                Number.isInteger(Number(line.quantity)) &&
-                                Number(line.quantity) >= 1 &&
-                                Number(line.quantity) <= 99,
+                {baskets.map(
+                    ({ retailer, picked, total, complete, fuel, combined }) => {
+                        return (
+                            <article className="drive-store" key={retailer.id}>
+                                <h2>{retailer.name}</h2>
+                                <strong className="drive-total">
+                                    {picked.length ? euros(total) : '—'}
+                                </strong>
+                                <p>Produits sélectionnés</p>
+                                <label>
+                                    Distance aller-retour (km)
+                                    <input
+                                        className="mt-2 block w-full rounded border p-2"
+                                        type="number"
+                                        min="0"
+                                        max="20000"
+                                        step="0.1"
+                                        value={distances[retailer.id] ?? ''}
+                                        onChange={(event) =>
+                                            setDistances((previous) => ({
+                                                ...previous,
+                                                [retailer.id]:
+                                                    event.target.value,
+                                            }))
+                                        }
+                                    />
+                                </label>
+                                <p>
+                                    Essence :{' '}
+                                    {fuel === null
+                                        ? 'À renseigner'
+                                        : euros(fuel)}
+                                </p>
+                                <p>
+                                    <strong>
+                                        Total courses + essence :{' '}
+                                        {combined === null
+                                            ? 'À compléter'
+                                            : euros(combined)}
+                                    </strong>
+                                </p>
+                                <p>
+                                    {picked.length}/{selectedItems.length}{' '}
+                                    ingrédient(s) renseigné(s)
+                                </p>
+                                <p className="drive-note">
+                                    {complete
+                                        ? 'Toutes les lignes sont renseignées. Vérifiez que les formats couvrent les besoins du menu.'
+                                        : 'Sous-total partiel. Complétez les produits, les quantités et les formats à vérifier pour comparer les paniers.'}
+                                </p>
+                                <Button
+                                    disabled={!complete || Boolean(busy)}
+                                    onClick={() => void prepare(retailer.id)}
+                                >
+                                    <Check size={16} /> Préparer le transfert
+                                </Button>
+                            </article>
                         );
-                    const total = picked.reduce(
-                        (sum, line) =>
-                            sum +
-                            line.product.priceCents * Number(line.quantity),
-                        0,
-                    );
-                    const complete =
-                        selectedItems.length > 0 &&
-                        picked.length === selectedItems.length;
-                    return (
-                        <article className="drive-store" key={retailer.id}>
-                            <h2>{retailer.name}</h2>
-                            <strong className="drive-total">
-                                {picked.length ? euros(total) : '—'}
-                            </strong>
-                            <p>
-                                {picked.length}/{selectedItems.length}{' '}
-                                ingrédient(s) renseigné(s)
-                            </p>
-                            <p className="drive-note">
-                                {complete
-                                    ? 'Toutes les lignes sont renseignées. Vérifiez que les formats couvrent les besoins du menu.'
-                                    : 'Sous-total partiel. Complétez les produits et quantités pour comparer les paniers.'}
-                            </p>
-                            <Button
-                                disabled={!complete || Boolean(busy)}
-                                onClick={() => void prepare(retailer.id)}
-                            >
-                                <Check size={16} /> Préparer le transfert
-                            </Button>
-                        </article>
-                    );
-                })}
+                    },
+                )}
             </section>
             <p className="drive-note">
                 Montants des produits sélectionnés, hors frais, consignes et
                 avantages fidélité. Les promotions par lots ne sont pas
                 recalculées ici. Prix valables pour la préparation pendant dix
-                minutes, revérifiés au transfert. Aucun classement automatique :
-                vérifiez des quantités et qualités comparables.
+                minutes, revérifiés au transfert. La sélection automatique porte
+                sur les résultats trouvés, pas sur tout le catalogue. Vérifiez
+                les qualités comparables et les lignes laissées à vérifier. Le
+                trajet est une estimation à partir de vos valeurs, hors péages.
             </p>
             {transfer && (
                 <div className="drive-transfer" role="status">

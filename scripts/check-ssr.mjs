@@ -67,12 +67,16 @@ for (const [component, props] of Object.entries(fixtures)) {
         signal: AbortSignal.timeout(10000),
     });
     const rendered = await response.json();
+    const marker =
+        {
+            welcome: 'home-hero',
+            'menus/show': 'Imprimer menus et courses',
+            'menus/drives': 'Courses + essence',
+        }[component] ?? 'menu-page';
     if (
         !response.ok ||
         typeof rendered.body !== 'string' ||
-        !rendered.body.includes(
-            component === 'welcome' ? 'home-hero' : 'menu-page',
-        )
+        !rendered.body.includes(marker)
     ) {
         throw new Error(
             `Le SSR actif ne rend pas ${component}. Recompiler avec npm run build et redémarrer le processus SSR. ${rendered.error ?? ''}`,

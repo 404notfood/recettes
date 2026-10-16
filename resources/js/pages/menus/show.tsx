@@ -13,6 +13,7 @@ import {
     Moon,
     Unlock,
     Users,
+    Printer,
     Zap,
 } from 'lucide-react';
 import { useEffect, useState } from 'react';
@@ -122,6 +123,20 @@ export default function MenuShow({
                     </div>
                 </div>
                 <div className="menu-tools">
+                    <Button
+                        asChild
+                        variant="outline"
+                        className="menu-pill"
+                        disabled={busy || !plan.meals.length}
+                    >
+                        <a
+                            href={`/menus/${plan.id}/imprimer-planning`}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                        >
+                            <Printer size={16} /> Imprimer menus et courses
+                        </a>
+                    </Button>
                     <MenuPdfExport
                         planId={plan.id}
                         disabled={busy || !plan.meals.length}

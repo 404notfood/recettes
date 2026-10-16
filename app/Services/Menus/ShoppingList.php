@@ -3,11 +3,10 @@
 namespace App\Services\Menus;
 
 use App\Models\MealPlan;
-use Illuminate\Support\Str;
 
 class ShoppingList
 {
-    public function __construct(private ShoppingCategories $categories) {}
+    public function __construct(private ShoppingCategories $categories, private ShoppingIngredient $ingredients) {}
 
     /**
      * @return list<array{name:string,unit:string,quantity:float|null,occurrences:int,category:string}>
@@ -19,12 +18,16 @@ class ShoppingList
             foreach ($meal->snapshot as $recipe) {
                 $factor = $plan->people / $recipe['servings'];
                 foreach ($recipe['ingredients'] as $ingredient) {
-                    $unit = $ingredient['unit'] ?? '';
+                    $normalized = $this->ingredients->normalize($ingredient['name'], $ingredient['unit'] ?? '');
+                    if ($normalized === null) {
+                        continue;
+                    }
+                    $unit = $normalized['unit'];
                     $structured = isset($ingredient['quantity']);
-                    $key = Str::lower(Str::ascii(trim($ingredient['name']))).'|'.$unit.'|'.($structured ? 'quantity' : 'unknown');
-                    $items[$key] ??= ['name' => $ingredient['name'], 'unit' => $unit, 'quantity' => $structured ? 0 : null, 'occurrences' => 0, 'category' => $this->categories->classify($ingredient['name'])];
+                    $key = $normalized['key'].'|'.$unit.'|'.($structured ? 'quantity' : 'unknown');
+                    $items[$key] ??= ['name' => $normalized['name'], 'unit' => $unit, 'quantity' => $structured ? 0 : null, 'occurrences' => 0, 'category' => $this->categories->classify($normalized['name'])];
                     if ($structured) {
-                        $items[$key]['quantity'] += (float) $ingredient['quantity'] * $factor;
+                        $items[$key]['quantity'] += (float) $ingredient['quantity'] * $factor * $normalized['factor'];
                     }
                     $items[$key]['occurrences']++;
                 }

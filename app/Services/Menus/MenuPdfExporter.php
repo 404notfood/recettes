@@ -16,6 +16,18 @@ class MenuPdfExporter
 {
     public function __construct(private ShoppingList $shopping) {}
 
+    public function printable(MealPlan $plan, string $document = 'full'): string
+    {
+        $plan->loadMissing('meals');
+
+        return view('menus.planning-print', [
+            'plan' => $plan, 'document' => $document,
+            'byDate' => $plan->meals->groupBy(fn ($meal) => $meal->date->format('Y-m-d')),
+            'groups' => $this->shopping->grouped($this->shopping->forPlan($plan)),
+            'formatQuantity' => fn ($item) => $this->formatQuantity($item),
+        ])->render();
+    }
+
     public function render(MealPlan $plan, string $document = 'full'): string
     {
         $plan->loadMissing('meals');

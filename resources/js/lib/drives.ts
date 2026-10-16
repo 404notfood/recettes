@@ -65,7 +65,7 @@ export function createDriveClient() {
     window.addEventListener('message', receive);
     return {
         request<T>(
-            operation: 'status' | 'search' | 'prepare' | 'job',
+            operation: 'status' | 'open' | 'search' | 'prepare' | 'job',
             payload: unknown = {},
         ): Promise<T> {
             return new Promise((resolve, reject) => {

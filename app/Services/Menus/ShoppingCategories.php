@@ -23,8 +23,16 @@ class ShoppingCategories
         }
         // Compound names take precedence over isolated words (e.g. potato vs apple).
         foreach ([
-            'pantry' => 'lait\s+(?:de\s+)?(?:coco|amande|avoine|soja)|beurre\s+(?:de\s+)?(?:cacahuete|arachide)|creme\s+(?:de\s+)?coco',
+            'pantry' => 'lait\s+(?:de\s+)?(?:coco|amande|avoine|soja)|beurre\s+(?:de\s+)?(?:cacahuete|arachide)|creme\s+(?:de\s+)?coco|sauce\s+(?:de\s+)?soja|pesto|dashi|miso|mirin|vin\s+(?:blanc|rouge)',
             'vegetables' => 'pommes?\s+de\s+terre|haricots?\s+verts?|petits?\s+pois',
+        ] as $category => $pattern) {
+            if (preg_match('/\b(?:'.$pattern.')\b/u', $name)) {
+                return $category;
+            }
+        }
+        foreach ([
+            'vegetables' => 'panais|wakame', 'dairy' => 'reblochon',
+            'starch' => 'crozets?|brioche\w*|chataigne\w*', 'herbs' => 'sauge',
         ] as $category => $pattern) {
             if (preg_match('/\b(?:'.$pattern.')\b/u', $name)) {
                 return $category;

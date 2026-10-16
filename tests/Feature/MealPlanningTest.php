@@ -62,6 +62,7 @@ class MealPlanningTest extends TestCase
         foreach (['starter', 'main', 'dessert'] as $course) {
             $this->recipe($course, 1);
         }
+        $this->recipe('main', 2);
         (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
         // The worker claims queued plans; set explicitly for this fixture.
         if (! $plan->fresh()->meals()->exists()) {
@@ -152,6 +153,57 @@ class MealPlanningTest extends TestCase
         Http::assertSentCount(1);
     }
 
+    public function test_empty_steps_in_generated_recipes_do_not_abort_a_complete_menu(): void
+    {
+        $owner = User::factory()->create();
+        $this->recipe('starter', 1);
+        config(['services.openai.key' => 'test-key']);
+        $mainSteps = ['Faites cuire le riz dans de l’eau frémissante pendant quinze minutes.', 'Découpez le poulet puis faites-le cuire à cœur dans une poêle.', 'Réunissez le riz et le poulet, puis servez bien chaud.'];
+        $dessertSteps = ['Épluchez les pommes puis découpez-les en petits morceaux.', 'Répartissez les morceaux de pommes dans quatre bols et servez.'];
+        $main = ['title' => 'Riz au poulet pour le menu', 'description' => 'Un plat simple de riz et de poulet pour toute la famille.', 'steps' => [...$mainSteps, ''], 'course_type' => 'main', 'servings' => 4, 'total_minutes' => 25, 'difficulty' => 1, 'vegetarian' => false, 'main_ingredient' => 'poulet', 'food_groups' => ['starch', 'protein'], 'protein_source' => 'poultry', 'dessert_profile' => null, 'ingredients' => [['name' => 'Poulet', 'quantity' => 500, 'unit' => 'g'], ['name' => 'Riz', 'quantity' => 300, 'unit' => 'g']]];
+        $dessert = ['title' => 'Pommes croquantes pour le menu', 'description' => 'Des pommes fraîches à partager pour terminer le repas.', 'steps' => ['  '.$dessertSteps[0].'  ', $dessertSteps[1], " \n\t "], 'course_type' => 'dessert', 'servings' => 4, 'total_minutes' => 5, 'difficulty' => 1, 'vegetarian' => true, 'main_ingredient' => 'pomme', 'food_groups' => ['fruit'], 'protein_source' => null, 'dessert_profile' => 'fruit', 'ingredients' => [['name' => 'Pomme', 'quantity' => 4, 'unit' => 'pièce']]];
+        Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [$main, $dessert]])]]]]])]);
+        $plan = MealPlan::create(['user_id' => $owner->id, 'title' => 'Menu', 'start_date' => '2026-10-19', 'days' => 1, 'people' => 4, 'status' => 'queued', 'criteria' => [...$this->criteria(), 'meals' => ['lunch']]]);
+
+        (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
+
+        $this->assertSame('ready', $plan->fresh()->status, $plan->fresh()->error_message ?? '');
+        $meal = $plan->meals()->firstOrFail();
+        $this->assertSame($mainSteps, $meal->snapshot['main']['steps']);
+        $this->assertSame($dessertSteps, $meal->snapshot['dessert']['steps']);
+        $this->assertSame($mainSteps, Recipe::where('title', $main['title'])->firstOrFail()->steps);
+        $this->assertSame($dessertSteps, Recipe::where('title', $dessert['title'])->firstOrFail()->steps);
+        Http::assertSentCount(1);
+    }
+
+    public function test_step_cleanup_still_rejects_empty_short_or_non_text_instructions(): void
+    {
+        config(['services.openai.key' => 'test-key']);
+        $recipe = ['title' => 'Pommes pour le menu', 'description' => 'Des pommes fraîches à partager pour terminer le repas.', 'course_type' => 'dessert', 'servings' => 4, 'total_minutes' => 5, 'difficulty' => 1, 'vegetarian' => true, 'main_ingredient' => 'pomme', 'food_groups' => ['fruit'], 'protein_source' => null, 'dessert_profile' => 'fruit', 'ingredients' => [['name' => 'Pomme', 'quantity' => 4, 'unit' => 'pièce']]];
+        $validStep = 'Épluchez les pommes puis découpez-les en petits morceaux.';
+        $cases = [
+            [['', " \t\n "], 'recipes.0.steps', 'Required'],
+            [[$validStep, '', 'Cuire'], 'recipes.0.steps.1', 'Min'],
+            [[$validStep, null], 'recipes.0.steps.1', 'Required'],
+            [[$validStep, 123], 'recipes.0.steps.1', 'String'],
+        ];
+        $responses = Http::sequence();
+        foreach ($cases as [$steps]) {
+            $responses->push(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [[...$recipe, 'steps' => $steps]]])]]]]]);
+        }
+        Http::fake(['api.openai.com/*' => $responses]);
+
+        foreach ($cases as [, $field, $rule]) {
+            try {
+                app(OpenAiRecipeService::class)->generate(['missing_courses' => ['dessert'], 'remaining_minutes' => 20]);
+                $this->fail('Une recette sans instructions valables ne doit pas être acceptée.');
+            } catch (PlanningException $error) {
+                $this->assertContains($rule, $error->diagnostics['validation_rules'][$field]);
+            }
+        }
+        Http::assertSentCount(count($cases));
+    }
+
     public function test_invalid_generated_recipe_is_diagnosed_without_logging_private_values(): void
     {
         Log::spy();
@@ -160,7 +212,9 @@ class MealPlanningTest extends TestCase
         $this->recipe('main', 1);
         config(['services.openai.key' => 'private-test-key']);
         $data = ['title' => 'Dessert privé', 'description' => 'secret-prompt', 'steps' => ['Préparez les pommes et servez-les en petits morceaux.'], 'course_type' => 'dessert', 'servings' => 4, 'total_minutes' => 10, 'difficulty' => 1, 'vegetarian' => true, 'main_ingredient' => 'pomme', 'food_groups' => ['fruit'], 'protein_source' => null, 'dessert_profile' => 'fruit', 'ingredients' => [['name' => 'Pomme', 'quantity' => 4, 'unit' => 'pièce']]];
-        Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [$data]])]]]]])]);
+        Http::fake(['api.openai.com/*' => Http::sequence()
+            ->push(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipe_ids' => [0, 1]])]]]]])
+            ->push(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [$data]])]]]]])]);
         $plan = MealPlan::create(['user_id' => $owner->id, 'title' => 'Menu', 'start_date' => '2026-10-19', 'days' => 1, 'people' => 4, 'status' => 'queued', 'criteria' => [...$this->criteria(), 'meals' => ['lunch'], 'preferences' => 'private-preferences']]);
 
         (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
@@ -180,7 +234,7 @@ class MealPlanningTest extends TestCase
 
             return true;
         });
-        Http::assertSentCount(1);
+        Http::assertSentCount(2);
     }
 
     public function test_invalid_enrichment_reports_field_rules_without_response_values(): void
@@ -248,6 +302,66 @@ class MealPlanningTest extends TestCase
                 $this->assertStringNotContainsString('private-', $error->getMessage());
             }
         }
+        Http::assertSentCount(3);
+    }
+
+    public function test_preferences_filter_catalogue_recipes_before_a_faster_unwanted_dish_can_be_selected(): void
+    {
+        $owner = User::factory()->create();
+        $this->recipe('starter', 1);
+        $french = $this->recipe('main', 1);
+        $french->update(['title' => 'Poulet à la française', 'total_minutes' => 40]);
+        $this->recipe('dessert', 1);
+        $unwanted = $this->recipe('main', 2);
+        $unwanted->update(['title' => 'Couscous express', 'total_minutes' => 5]);
+        config(['services.openai.key' => 'test-key']);
+        Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipe_ids' => [0, 1, 2]])]]]]])]);
+        $plan = MealPlan::create(['user_id' => $owner->id, 'title' => 'Menu français', 'start_date' => '2026-10-19', 'days' => 1, 'people' => 4, 'status' => 'queued', 'criteria' => [...$this->criteria(), 'meals' => ['lunch'], 'preferences' => 'Cuisine française']]);
+
+        (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
+
+        $this->assertSame('ready', $plan->fresh()->status, $plan->fresh()->error_message ?? '');
+        $this->assertSame($french->id, $plan->meals()->firstOrFail()->main_recipe_id);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => str_contains($request['input'], 'Cuisine française') && str_contains($request['input'], 'Couscous express'));
+    }
+
+    public function test_weekly_variety_counts_couscous_variants_together_and_does_not_repeat_main_recipes(): void
+    {
+        foreach (['starter', 'main', 'dessert'] as $course) {
+            for ($number = 0; $number < 17; $number++) {
+                $recipe = $this->recipe($course, $number);
+                if ($course === 'main' && $number < 3) {
+                    $recipe->update(['title' => 'Couscous variante '.$number]);
+                }
+            }
+        }
+        $owner = User::factory()->create();
+        $plan = MealPlan::create(['user_id' => $owner->id, 'title' => 'Menus variés', 'start_date' => '2026-10-19', 'days' => 7, 'people' => 4, 'status' => 'queued', 'criteria' => $this->criteria(7)]);
+        (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
+        $this->assertSame('ready', $plan->fresh()->status, $plan->fresh()->error_message ?? '');
+        $meals = $plan->meals()->get();
+        $this->assertCount(14, $meals);
+        $this->assertCount(14, $meals->pluck('main_recipe_id')->unique());
+        $this->assertLessThanOrEqual(2, $meals->filter(fn ($meal) => str_starts_with($meal->snapshot['main']['title'], 'Couscous'))->count());
+        Http::assertNothingSent();
+    }
+
+    public function test_preferences_are_checked_on_new_recipes_before_they_are_saved(): void
+    {
+        $owner = User::factory()->create();
+        $this->recipe('starter', 1);
+        $this->recipe('main', 1);
+        config(['services.openai.key' => 'test-key']);
+        $dessert = ['title' => 'Dessert à refuser', 'description' => 'Un dessert qui ne correspond pas aux envies indiquées.', 'steps' => ['Épluchez les pommes et servez-les en petits morceaux.'], 'course_type' => 'dessert', 'servings' => 4, 'total_minutes' => 5, 'difficulty' => 1, 'vegetarian' => true, 'main_ingredient' => 'pomme', 'food_groups' => ['fruit'], 'protein_source' => null, 'dessert_profile' => 'fruit', 'ingredients' => [['name' => 'Pomme', 'quantity' => 4, 'unit' => 'pièce']]];
+        $output = fn ($data) => ['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode($data)]]]]];
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($output(['recipe_ids' => [0, 1]]))->push($output(['recipes' => [$dessert]]))->push($output(['recipe_ids' => []]))]);
+        $plan = MealPlan::create(['user_id' => $owner->id, 'title' => 'Menu', 'start_date' => '2026-10-19', 'days' => 1, 'people' => 4, 'status' => 'queued', 'criteria' => [...$this->criteria(), 'meals' => ['lunch'], 'preferences' => 'Cuisine française']]);
+        (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
+        $this->assertSame('failed', $plan->fresh()->status);
+        $this->assertStringContainsString('envies culinaires', $plan->fresh()->error_message);
+        $this->assertFalse(Recipe::where('is_ai_generated', true)->exists());
+        $this->assertSame(0, $plan->meals()->count());
         Http::assertSentCount(3);
     }
 

@@ -25,8 +25,9 @@ class HybridMenuPlanner
                 $query->where('user_id', $plan->user_id)->where('status', 'pending');
             });
         })->orderBy('id')->get()->map(fn ($recipe) => Recipe::fromRecord($recipe));
-        $enriched = $this->enrichCatalogue($catalogue, $criteria);
-        $eligible = $catalogue->filter(fn ($recipe) => $this->rules->eligible($recipe, $criteria));
+        $matching = $this->matchingPreferences($catalogue, $criteria);
+        $enriched = $this->enrichCatalogue($matching, $criteria);
+        $eligible = $matching->filter(fn ($recipe) => $this->rules->eligible($recipe, $criteria));
         $plan->load('meals');
         $prepared = [];
         $drafts = [];
@@ -81,6 +82,7 @@ class HybridMenuPlanner
                         'people' => $plan->people, 'difficulty' => $criteria['difficulty'],
                         'vegetarian' => $criteria['vegetarian'], 'excluded' => $criteria['excluded'],
                         'preferences' => $criteria['preferences'], 'date' => $date, 'meal' => $type,
+                        'avoid_dish_families' => array_map(fn ($key) => substr($key, 7), array_keys(array_filter($counts, fn ($count, $key) => str_starts_with($key, 'family:') && $count >= max(1, (int) ceil($weekMeals / 7)), ARRAY_FILTER_USE_BOTH))),
                         'required_food_groups' => array_values(array_diff(['vegetables', 'starch', 'protein'], array_unique(array_merge(...array_values(array_map(fn ($recipe) => $recipe->food_groups ?? [], array_intersect_key($selected, array_flip(['starter', 'main'])))))))),
                         'allowed_protein_sources' => array_values(array_filter(RecipeCriteria::PROTEINS, fn ($source) => $this->rules->allowedByWeek(new Recipe(['course_type' => 'main', 'protein_source' => $source]), $counts, $weekMeals)
                             && (! $criteria['vegetarian'] || in_array($source, ['eggs', 'legumes', 'plant', 'dairy'], true)))),
@@ -113,7 +115,7 @@ class HybridMenuPlanner
                     || array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $selected)) > $limit) {
                     throw new PlanningException('Impossible de composer un repas complet avec légumes, féculents et protéines dans le temps demandé.');
                 }
-                $this->trackWeek(array_map(fn ($recipe) => $recipe->only(['protein_source', 'dessert_profile']), $selected), $weekly[$week]);
+                $this->trackWeek(array_map(fn ($recipe) => $recipe->only(['title', 'protein_source', 'dessert_profile']), $selected), $weekly[$week]);
                 foreach ($selected as $recipe) {
                     $key = $this->rules->fingerprint($recipe);
                     $usage[$key] = ($usage[$key] ?? 0) + 1;
@@ -121,6 +123,11 @@ class HybridMenuPlanner
                 $previous = array_map(fn ($recipe) => ['title' => $recipe->title, 'main_ingredient' => $recipe->main_ingredient, 'protein_source' => $recipe->protein_source], $selected);
                 $prepared[] = compact('date', 'type', 'quick', 'selected');
             }
+        }
+
+        // Verify newly generated recipes against the same preferences before saving anything.
+        if ($drafts && count($this->matchingPreferences(collect($drafts), $criteria)) !== count($drafts)) {
+            throw new PlanningException('Les recettes proposées ne respectent pas vos envies culinaires. Réessayez la génération.');
         }
 
         // API calls happen before the transaction: no partially imported menu on failure.
@@ -146,6 +153,34 @@ class HybridMenuPlanner
             }
             $current->update(['status' => 'ready', 'error_message' => null]);
         });
+    }
+
+    /**
+     * @param  Collection<int,Recipe>  $catalogue
+     * @param  array<string,mixed>  $criteria
+     * @return Collection<int,Recipe>
+     */
+    private function matchingPreferences(Collection $catalogue, array $criteria): Collection
+    {
+        $preferences = trim($criteria['preferences'] ?? '');
+        if ($preferences === '' || $catalogue->isEmpty()) {
+            return $catalogue;
+        }
+        if (! $this->ai->configured()) {
+            throw new PlanningException('La prise en compte de vos envies nécessite le service de création de recettes. Vérifiez sa configuration côté serveur.');
+        }
+        $matches = collect();
+        // Temporary local IDs also cover new recipes that have not been saved yet.
+        foreach ($catalogue->values()->chunk(40) as $batch) {
+            $input = array_values($batch->map(fn ($recipe, $index) => [
+                'id' => $index, 'title' => $recipe->title, 'description' => $recipe->description,
+                'course_type' => $recipe->course_type, 'ingredients' => $recipe->ingredients->pluck('name')->all(),
+            ])->all());
+            $ids = $this->ai->preferenceMatches($input, $preferences);
+            $matches = $matches->concat($batch->filter(fn ($recipe, $index) => in_array($index, $ids, true)));
+        }
+
+        return $matches->values();
     }
 
     /**
@@ -219,8 +254,8 @@ class HybridMenuPlanner
     private function select(Collection $catalogue, array $criteria, int $limit, array $usage, array $previous, array $fixed, array $banned, array $counts, int $weekMeals): array
     {
         $pools = [];
-        $maxUses = 2 * (int) ceil($criteria['days'] / 7);
         foreach (self::COURSES as $course) {
+            $maxUses = ($course === 'main' ? 1 : 2) * (int) ceil($criteria['days'] / 7);
             if (isset($fixed[$course])) {
                 $pools[$course] = [$fixed[$course]];
 
@@ -231,7 +266,7 @@ class HybridMenuPlanner
                 && ($usage[$this->rules->fingerprint($recipe)] ?? 0) < $maxUses
                 && $this->rules->allowedByWeek($recipe, $counts, $weekMeals)
                 && ! in_array($this->rules->fingerprint($recipe), $banned, true))
-                ->sortBy(fn ($recipe) => ($usage[$this->rules->fingerprint($recipe)] ?? 0) * 100 + $recipe->total_minutes)
+                ->sortBy(fn ($recipe) => ($usage[$this->rules->fingerprint($recipe)] ?? 0) * 10000 + ($counts['family:'.$this->rules->family($recipe)] ?? 0) * 1000 + $recipe->total_minutes)
                 ->take(20)->values()->all();
             $pools[$course][] = null;
         }
@@ -247,6 +282,7 @@ class HybridMenuPlanner
                     }
                     $score = count($recipes) * 100000 - $minutes;
                     if ($main) {
+                        $score -= ($counts['family:'.$this->rules->family($main)] ?? 0) * 4000;
                         $score -= ($counts[$main->protein_source] ?? 0) * 1200;
                         if (($previous['main']['protein_source'] ?? null) === $main->protein_source) {
                             $score -= 2000;
@@ -317,6 +353,13 @@ class HybridMenuPlanner
     {
         $counts ??= [];
         $protein = $snapshot['main']['protein_source'] ?? null;
+        if (isset($snapshot['main']['title'])) {
+            $main = new Recipe(['title' => $snapshot['main']['title']]);
+            $recipeKey = 'recipe:'.$this->rules->fingerprint($main);
+            $counts[$recipeKey] = ($counts[$recipeKey] ?? 0) + 1;
+            $familyKey = 'family:'.$this->rules->family($main);
+            $counts[$familyKey] = ($counts[$familyKey] ?? 0) + 1;
+        }
         if (is_string($protein) && $protein !== '') {
             $counts[$protein] = ($counts[$protein] ?? 0) + 1;
         }
