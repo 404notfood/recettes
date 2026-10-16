@@ -1,7 +1,8 @@
 (() => {
-    if (globalThis.__cuistotDriveBridge) return;
-    globalThis.__cuistotDriveBridge = true;
-    window.addEventListener('message', async (event) => {
+    const previous = globalThis.__cuistotDriveBridge;
+    if (previous?.version === '0.1.2') return;
+    previous?.dispose?.();
+    const receive = async (event) => {
         const request = event.data;
         if (
             event.source !== window ||
@@ -10,7 +11,7 @@
         )
             return;
         if (
-            !['status', 'open', 'search', 'prepare', 'job'].includes(
+            !['ping', 'status', 'open', 'search', 'prepare', 'job'].includes(
                 request.operation,
             ) ||
             typeof request.id !== 'string' ||
@@ -30,5 +31,10 @@
             { channel: 'cuistot-drives:response', id: request.id, ...response },
             location.origin,
         );
-    });
+    };
+    window.addEventListener('message', receive);
+    globalThis.__cuistotDriveBridge = {
+        version: '0.1.2',
+        dispose: () => window.removeEventListener('message', receive),
+    };
 })();

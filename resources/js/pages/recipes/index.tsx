@@ -21,6 +21,7 @@ import {
 } from '@/types/food';
 
 type Filters = {
+    source?: string;
     q?: string;
     category?: string;
     difficulty?: string;
@@ -32,10 +33,12 @@ export default function Recipes({
     recipes,
     categories,
     filters,
+    menuLibraryAvailable = false,
 }: {
     recipes: Pagination<Recipe>;
     categories: Category[];
     filters: Filters;
+    menuLibraryAvailable?: boolean;
 }) {
     const [search, setSearch] = useState(filters.q || '');
     function apply(key: keyof Filters, value: string) {
@@ -50,10 +53,20 @@ export default function Recipes({
         e.preventDefault();
         apply('q', search.trim());
     }
-    const active = Object.values(filters).some(Boolean);
+    const active = Object.entries(filters).some(
+        ([key, value]) => key !== 'source' && Boolean(value),
+    );
     return (
         <>
-            <Seo title="Toutes les recettes" path="/recettes" />
+            <Seo
+                title={
+                    filters.source === 'menus'
+                        ? 'Mes recettes de menus'
+                        : 'Toutes les recettes'
+                }
+                path="/recettes"
+                privatePreview={filters.source === 'menus'}
+            />
             <section className="catalog-heading site-container">
                 <div className="eyebrow">LE CARNET DES BONNES IDÉES</div>
                 <h1>
@@ -65,6 +78,37 @@ export default function Recipes({
                 </p>
             </section>
             <section className="site-container catalog-content">
+                {menuLibraryAvailable && (
+                    <div
+                        className="category-pills"
+                        aria-label="Catalogue de recettes"
+                    >
+                        <button
+                            aria-pressed={!filters.source}
+                            className={!filters.source ? 'selected' : ''}
+                            onClick={() => apply('source', '')}
+                        >
+                            Toutes les recettes publiées
+                        </button>
+                        <button
+                            aria-pressed={filters.source === 'menus'}
+                            className={
+                                filters.source === 'menus' ? 'selected' : ''
+                            }
+                            onClick={() => apply('source', 'menus')}
+                        >
+                            Mes recettes de menus
+                        </button>
+                    </div>
+                )}
+                {filters.source === 'menus' && (
+                    <p>
+                        Les recettes créées pour vos menus sont enregistrées
+                        dans votre carnet. Vous pouvez les cuisiner
+                        immédiatement ; elles restent privées jusqu’à leur
+                        validation par l’équipe.
+                    </p>
+                )}
                 <form className="catalog-search" onSubmit={submit}>
                     <Search size={22} />
                     <Input
@@ -93,7 +137,7 @@ export default function Recipes({
                             onClick={() => apply('category', c.slug)}
                         >
                             {c.name}
-                            <span>{c.recipes_count}</span>
+                            {!filters.source && <span>{c.recipes_count}</span>}
                         </button>
                     ))}
                 </div>
@@ -148,7 +192,12 @@ export default function Recipes({
                             className="reset-filters"
                             onClick={() => {
                                 setSearch('');
-                                router.get('/recettes');
+                                router.get(
+                                    '/recettes',
+                                    filters.source
+                                        ? { source: filters.source }
+                                        : {},
+                                );
                             }}
                         >
                             <X size={14} />
@@ -171,12 +220,28 @@ export default function Recipes({
                 {!recipes.data.length && (
                     <div className="empty-state">
                         <CookingPot />
-                        <h2>On n’a pas encore cette recette.</h2>
+                        <h2>
+                            {filters.source === 'menus'
+                                ? 'Aucune recette de menu ici pour le moment.'
+                                : 'On n’a pas encore cette recette.'}
+                        </h2>
                         <p>
-                            Essayez une autre recherche, ou partagez la vôtre !
+                            {filters.source === 'menus'
+                                ? 'Les recettes créées pour compléter vos menus apparaîtront ici dès que leur préparation sera terminée. Si des filtres sont actifs, essayez de les retirer.'
+                                : 'Essayez une autre recherche, ou partagez la vôtre !'}
                         </p>
                         <Button asChild className="pill-button">
-                            <Link href="/proposer">Proposer une recette</Link>
+                            <Link
+                                href={
+                                    filters.source === 'menus'
+                                        ? '/menus'
+                                        : '/proposer'
+                                }
+                            >
+                                {filters.source === 'menus'
+                                    ? 'Préparer un menu'
+                                    : 'Proposer une recette'}
+                            </Link>
                         </Button>
                     </div>
                 )}

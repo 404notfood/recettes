@@ -74,7 +74,7 @@ export default function MenuDrives({
         return () => clearInterval(timer);
     }, []);
     async function request<T>(
-        operation: 'status' | 'open' | 'search' | 'prepare' | 'job',
+        operation: 'ping' | 'status' | 'open' | 'search' | 'prepare' | 'job',
         payload?: unknown,
     ) {
         if (!client.current)
@@ -86,6 +86,11 @@ export default function MenuDrives({
         setError('');
         setNotice('');
         try {
+            const connection = await request<{ version: string }>('ping');
+            if (connection.version !== '0.1.2')
+                throw new Error(
+                    'Mettez à jour l’extension avec le ZIP ci-dessous (version 0.1.2), rechargez-la puis reliez cette page.',
+                );
             const response = await request<{
                 tabs: { retailer: Retailer; tabId: number }[];
             }>('open');
@@ -379,8 +384,20 @@ export default function MenuDrives({
                         onClick={() => void openDrives()}
                         disabled={Boolean(busy)}
                     >
-                        <ArrowUpRight size={16} /> Ouvrir les 3 drives
+                        {busy === 'open' ? (
+                            <LoaderCircle size={16} className="animate-spin" />
+                        ) : (
+                            <ArrowUpRight size={16} />
+                        )}
+                        {busy === 'open'
+                            ? 'Connexion à l’extension…'
+                            : 'Ouvrir les 3 drives'}
                     </Button>
+                    <p className="drive-note" role="status">
+                        {busy === 'open'
+                            ? 'Vérification de l’extension, puis ouverture des trois onglets…'
+                            : 'Nécessite l’extension 0.1.2. Sans extension, ouvrez chaque enseigne avec son lien ci-dessous.'}
+                    </p>
                     <a
                         href="/downloads/cuistot-drives.zip"
                         className="drive-download"
@@ -402,7 +419,15 @@ export default function MenuDrives({
                             <li>
                                 Sur cette page, cliquez sur l’icône de
                                 l’extension puis « Relier le site de cet onglet
-                                ».
+                                ». La page se recharge pour activer la
+                                connexion.
+                            </li>
+                            <li>
+                                Après une mise à jour, remplacez les fichiers du
+                                dossier chargé, puis cliquez sur « Recharger »
+                                dans la page des extensions. Le bouton « Ouvrir
+                                les 3 drives » de l’extension fonctionne aussi
+                                directement.
                             </li>
                             <li>
                                 Ouvrez vos drives puis cliquez sur « Détecter

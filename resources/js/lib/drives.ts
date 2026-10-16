@@ -65,7 +65,13 @@ export function createDriveClient() {
     window.addEventListener('message', receive);
     return {
         request<T>(
-            operation: 'status' | 'open' | 'search' | 'prepare' | 'job',
+            operation:
+                | 'ping'
+                | 'status'
+                | 'open'
+                | 'search'
+                | 'prepare'
+                | 'job',
             payload: unknown = {},
         ): Promise<T> {
             return new Promise((resolve, reject) => {
@@ -78,13 +84,21 @@ export function createDriveClient() {
                         pending.delete(id);
                         reject(
                             new Error(
-                                operation === 'status'
-                                    ? 'Extension non détectée. Installez-la, reliez ce site puis rechargez la page.'
-                                    : 'Réponse non reçue. Vérifiez les onglets du drive et de l’extension.',
+                                operation === 'ping' || operation === 'open'
+                                    ? 'Extension 0.1.2 non détectée ou déconnectée. Téléchargez le nouveau ZIP, rechargez l’extension dans Chrome/Edge puis cliquez sur « Relier le site de cet onglet ». Vous pouvez aussi ouvrir chaque drive avec les liens ci-dessous.'
+                                    : operation === 'status'
+                                      ? 'Extension non détectée. Installez-la, reliez ce site puis rechargez la page.'
+                                      : 'Réponse non reçue. Vérifiez les onglets du drive et de l’extension.',
                             ),
                         );
                     },
-                    operation === 'status' ? 30000 : 90000,
+                    operation === 'ping'
+                        ? 2500
+                        : operation === 'open'
+                          ? 10000
+                          : operation === 'status'
+                            ? 30000
+                            : 90000,
                 );
                 pending.set(id, {
                     resolve: (value) => resolve(value as T),

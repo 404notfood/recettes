@@ -46,6 +46,31 @@ const fixtures = {
             { id: 'riz', name: 'Riz', quantity: 300, unit: 'g' },
         ],
     },
+    'recipes/index': {
+        menuLibraryAvailable: true,
+        filters: { source: 'menus' },
+        categories: [],
+        recipes: {
+            total: 1,
+            current_page: 1,
+            last_page: 1,
+            links: [],
+            data: [
+                {
+                    ...recipe,
+                    slug: 'verification-privee',
+                    author_name: user.name,
+                    image_url: '/images/recipe-placeholder.svg',
+                    total_time: 20,
+                    difficulty: 'facile',
+                    category: { id: 1, name: 'Plats', slug: 'plats' },
+                    tags: [],
+                    rating: null,
+                    private_preview: true,
+                },
+            ],
+        },
+    },
 };
 
 for (const [component, props] of Object.entries(fixtures)) {
@@ -71,7 +96,8 @@ for (const [component, props] of Object.entries(fixtures)) {
         {
             welcome: 'home-hero',
             'menus/show': 'Imprimer menus et courses',
-            'menus/drives': 'Courses + essence',
+            'menus/drives': 'Nécessite l’extension 0.1.2.',
+            'recipes/index': 'Privée · en validation',
         }[component] ?? 'menu-page';
     if (
         !response.ok ||

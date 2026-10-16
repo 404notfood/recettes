@@ -19,6 +19,7 @@ for (const name of [
     'menus/show',
     'menus/recipe',
     'menus/drives',
+    'recipes/index',
 ]) {
     const source = `resources/js/pages/${name}.tsx`;
     if (

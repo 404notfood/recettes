@@ -20,7 +20,7 @@ class CommunityController extends Controller
         $recipes = Recipe::with('category')->where('user_id', $request->user()->id)->latest()->get();
 
         return Inertia::render('dashboard', [
-            'recipes' => $recipes->map(fn (Recipe $recipe) => $recipe->publicData() + ['status' => $recipe->status, 'has_revision' => $recipe->proposed_changes !== null, 'moderation_note' => $recipe->moderation_note]),
+            'recipes' => $recipes->map(fn (Recipe $recipe) => $recipe->publicData() + ['status' => $recipe->status, 'is_ai_generated' => $recipe->is_ai_generated, 'has_revision' => $recipe->proposed_changes !== null, 'moderation_note' => $recipe->moderation_note]),
             'stats' => ['total' => $recipes->count(), 'published' => $recipes->where('status', 'published')->count(), 'pending' => $recipes->where('status', 'pending')->count(), 'favorites' => DB::table('favorites')->where('user_id', $request->user()->id)->count()],
         ]);
     }

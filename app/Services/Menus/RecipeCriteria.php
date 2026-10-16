@@ -127,8 +127,9 @@ class RecipeCriteria
     {
         $title = Str::lower(Str::ascii($recipe->title));
         foreach ([
+            'gratin savoyard' => 'croziflette|tartiflette|reblochonnade',
             'couscous' => 'couscous|semoule',
-            'pâtes' => 'pates|spaghetti|penne|macaroni|tagliatelle|coquillette|croziflette|crozets',
+            'pâtes' => 'pates|spaghetti|penne|macaroni|tagliatelle|coquillette|crozets',
             'risotto' => 'risotto', 'soupe' => 'soupe|potage|veloute|bouillon',
             'salade' => 'salade', 'gratin' => 'gratin|tartiflette',
             'omelette' => 'omelette|frittata', 'tarte salée' => 'quiche|tarte',

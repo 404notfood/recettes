@@ -1,5 +1,26 @@
 import { appOrigin } from './policy.js';
 const status = document.querySelector('#status');
+document.querySelector('#open').addEventListener('click', async (event) => {
+    const button = event.currentTarget;
+    button.disabled = true;
+    status.textContent = 'Ouverture des trois drives…';
+    try {
+        const response = await chrome.runtime.sendMessage({
+            operation: 'open',
+        });
+        if (response.error) throw new Error(response.error);
+        if (response.value.tabs.length !== 3)
+            throw new Error(
+                'Certains onglets n’ont pas pu être ouverts. Réessayez ou ouvrez les liens du site un par un.',
+            );
+        status.textContent =
+            'Les trois drives sont ouverts. Choisissez vos magasins dans leurs onglets.';
+    } catch (error) {
+        status.textContent = error.message;
+    } finally {
+        button.disabled = false;
+    }
+});
 const saved = await chrome.storage.local.get(['appOrigin', 'appMatch']);
 const [activeTab] = await chrome.tabs.query({
     active: true,
@@ -29,11 +50,9 @@ document.querySelector('#pair').addEventListener('click', async () => {
         await chrome.storage.session.clear();
         if (saved.appMatch && saved.appMatch !== match)
             await chrome.permissions.remove({ origins: [saved.appMatch] });
-        await chrome.scripting.executeScript({
-            target: { tabId: tab.id },
-            files: ['bridge.js'],
-        });
-        status.textContent = `Site relié : ${origin}. Revenez à vos menus.`;
+        // Reload removes bridges left behind by an older extension context.
+        await chrome.tabs.reload(tab.id);
+        status.textContent = `Site relié : ${origin}. La page a été rechargée, revenez à vos menus.`;
     } catch (error) {
         status.textContent = error.message;
     }

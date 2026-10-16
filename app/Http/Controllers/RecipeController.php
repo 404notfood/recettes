@@ -29,8 +29,15 @@ class RecipeController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = $request->validate(['q' => 'nullable|string|max:100', 'category' => 'nullable|string|max:80', 'difficulty' => 'nullable|in:facile,moyen,avance', 'time' => 'nullable|integer|in:15,30,60', 'tag' => 'nullable|in:vegetarien,vegan,sans-gluten,rapide,economique,de-saison', 'sort' => 'nullable|in:recent,time,rating']);
-        $query = Recipe::with('category')->withAvg('reviews', 'rating')->withCount('reviews')->where('status', 'published');
+        $filters = $request->validate(['source' => 'nullable|in:menus', 'q' => 'nullable|string|max:100', 'category' => 'nullable|string|max:80', 'difficulty' => 'nullable|in:facile,moyen,avance', 'time' => 'nullable|integer|in:15,30,60', 'tag' => 'nullable|in:vegetarien,vegan,sans-gluten,rapide,economique,de-saison', 'sort' => 'nullable|in:recent,time,rating']);
+        $menuLibrary = ($filters['source'] ?? null) === 'menus';
+        abort_if($menuLibrary && ! $request->user(), 403);
+        $query = Recipe::with('category')->withAvg('reviews', 'rating')->withCount('reviews');
+        if ($menuLibrary) {
+            $query->where('user_id', $request->user()->id)->where('is_ai_generated', true)->whereIn('status', ['pending', 'published', 'changes_requested']);
+        } else {
+            $query->where('status', 'published');
+        }
         if (! empty($filters['q'])) {
             $search = '%'.mb_strtolower($filters['q']).'%';
             $query->where(fn ($q) => $q->whereRaw('LOWER(title) LIKE ?', [$search])->orWhereRaw('LOWER(description) LIKE ?', [$search])->orWhereRaw('LOWER(CAST(ingredients AS TEXT)) LIKE ?', [$search]));
@@ -50,11 +57,11 @@ class RecipeController extends Controller
         match ($filters['sort'] ?? 'recent') {
             'time' => $query->orderByRaw('prep_time + cook_time ASC'),
             'rating' => $query->orderByRaw('reviews_avg_rating DESC NULLS LAST'),
-            default => $query->latest('published_at'),
+            default => $menuLibrary ? $query->latest('created_at') : $query->latest('published_at'),
         };
-        $recipes = $query->orderByDesc('id')->paginate(12)->withQueryString()->through(fn (Recipe $recipe) => $recipe->publicData());
+        $recipes = $query->orderByDesc('id')->paginate(12)->withQueryString()->through(fn (Recipe $recipe) => $recipe->publicData() + ['private_preview' => $recipe->status !== 'published']);
 
-        return Inertia::render('recipes/index', ['recipes' => $recipes, 'categories' => $this->categories(), 'filters' => $filters]);
+        return Inertia::render('recipes/index', ['recipes' => $recipes, 'categories' => $this->categories(), 'filters' => $filters, 'menuLibraryAvailable' => (bool) $request->user()]);
     }
 
     public function show(Request $request, Recipe $recipe): Response

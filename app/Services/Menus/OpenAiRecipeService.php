@@ -110,6 +110,8 @@ class OpenAiRecipeService
             .'Respecte les envies et la cuisine demandée même lorsque le catalogue ne suffit pas. '
             .'Varie réellement les familles de plats et les féculents : changer la protéine d’un couscous ne crée pas une nouvelle famille. '
             .'N’utilise aucune famille de plats de avoid_dish_families. '
+            .'Pour chaque rôle, évite les ingrédients dominants de avoid_ingredients_by_course et les variantes des titres de nearby_recipes_by_course : ils figurent déjà dans les deux jours voisins. '
+            .'Croziflette et tartiflette appartiennent à la même famille de gratins savoyards. Changer la viande d’un plat aux poireaux ne suffit pas à varier les légumes. '
             .'La somme des total_minutes des nouvelles recettes doit être inférieure ou égale au temps restant, même sans travail en parallèle. '
             .'Inclure cuisson, repos et refroidissement dans total_minutes. Aucun ingrédient exclu ni dérivé évident. '
             .'Description courte en français ; steps contient les étapes détaillées, dans l’ordre, avec temps et températures réalistes. '

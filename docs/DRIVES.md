@@ -16,7 +16,9 @@ La page privée `/menus/{id}/drives` part d'un planning complet appartenant au m
 
 Les identifiants et cookies d'authentification restent dans le navigateur sur les sites marchands. Le serveur Laravel ne reçoit ni mots de passe, ni jetons, ni contenu des paniers marchands. Les références, prix et transferts sont conservés temporairement dans `chrome.storage.session` ; ils disparaissent à la fermeture du navigateur ou à la déconnexion de l'extension.
 
-Le bouton d'ouverture groupée nécessite l'extension **0.1.1** : après mise à jour du ZIP, décompresser la nouvelle version, recharger son dossier dans la page des extensions puis recharger la page des menus. Le site ne peut pas mettre à jour lui-même une extension chargée manuellement.
+Le bouton d'ouverture groupée nécessite l'extension **0.1.2** : télécharger et décompresser le nouveau ZIP, remplacer les fichiers du dossier chargé puis cliquer sur **Recharger** dans `chrome://extensions` ou `edge://extensions`. Depuis la page des menus, utiliser **Relier le site de cet onglet** : la page est rechargée pour retirer une ancienne connexion restée en mémoire. Le site ne peut pas mettre à jour lui-même une extension chargée manuellement.
+
+Le bouton affiche immédiatement une progression. Une vérification légère attend au maximum 2,5 secondes avant de signaler une extension absente ou déconnectée, au lieu d'attendre 90 secondes sans retour. Le popup de l'extension propose aussi **Ouvrir les 3 drives**, indépendant de la liaison du site. Un échec sur une enseigne n'empêche pas l'ouverture des deux autres. Sans extension, chaque enseigne dispose de son lien individuel : les navigateurs peuvent bloquer l'ouverture de plusieurs onglets par un seul clic du site.
 
 ## État et limites
 
@@ -37,7 +39,7 @@ Renseigner le **prix du carburant en €/L** et la **distance totale aller-retou
 
 Le classement additionne le panier et l'essence uniquement si les lignes sont complètes et les données de trajet renseignées. Il indique le magasin le moins cher parmi ces paniers, sans prétendre connaître tout le catalogue marchand. Les cinq candidats trouvés, les magasins choisis et les formats disponibles limitent la comparaison. Les prix du carburant et distances sont saisis manuellement, restent dans la page et ne sont envoyés ni aux marchands ni à Laravel. Aucune géolocalisation ni consultation automatique des tarifs des stations n'est effectuée.
 
-Le préremplissage ne lance aucun transfert. L'utilisateur peut changer les références, vérifier les produits et confirmer le transfert dans l'extension. Le prix et le stock sont toujours revérifiés au transfert. Cette fonction utilise l'extension 0.1.1 existante ; déployer les nouveaux builds navigateur et SSR, puis redémarrer le SSR.
+Le préremplissage ne lance aucun transfert. L'utilisateur peut changer les références, vérifier les produits et confirmer le transfert dans l'extension. Le prix et le stock sont toujours revérifiés au transfert. Déployer les nouveaux builds navigateur et SSR ainsi que le ZIP 0.1.2, puis redémarrer le SSR.
 
 ## Références techniques
 

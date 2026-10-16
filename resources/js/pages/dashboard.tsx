@@ -58,6 +58,9 @@ export default function Dashboard({
                     </Link>
                     <Link href="/mes-favoris">Mes favoris</Link>
                     <Link href="/menus">Mes menus</Link>
+                    <Link href="/recettes?source=menus">
+                        Mes recettes de menus
+                    </Link>
                     <Link href="/settings/profile">Mon compte</Link>
                     {Boolean(user.is_admin) && (
                         <Link href="/administration">Administration</Link>
@@ -101,7 +104,8 @@ export default function Dashboard({
                             )}
                         </div>
                         <div className="manage-actions">
-                            {recipe.status === 'published' && (
+                            {(recipe.status === 'published' ||
+                                recipe.is_ai_generated) && (
                                 <Button asChild variant="ghost" size="icon">
                                     <Link
                                         href={`/recettes/${recipe.slug}`}

@@ -59,6 +59,11 @@ export function RecipeCard({
             <Link href={`/recettes/${recipe.slug}`}>
                 <h3>{recipe.title}</h3>
             </Link>
+            {recipe.private_preview && (
+                <p className="status-badge status-pending">
+                    Privée · en validation
+                </p>
+            )}
             <div className="recipe-author">
                 <span
                     className={`author-avatar avatar-${index % 3}`}

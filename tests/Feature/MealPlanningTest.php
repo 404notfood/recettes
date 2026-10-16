@@ -9,6 +9,7 @@ use App\Models\Recipe;
 use App\Models\User;
 use App\Services\Menus\CatalogueMetadata;
 use App\Services\Menus\HybridMenuPlanner;
+use App\Services\Menus\MenuDiversity;
 use App\Services\Menus\OpenAiRecipeService;
 use App\Services\Menus\PlanningException;
 use App\Services\Menus\PlanningRecipe;
@@ -39,7 +40,12 @@ class MealPlanningTest extends TestCase
     private function recipe(string $course, int $number, ?User $owner = null, string $status = 'published'): Recipe
     {
         $category = Category::firstOrCreate(['slug' => ['starter' => 'entrees', 'main' => 'plats', 'dessert' => 'douceurs'][$course]], ['name' => $course]);
-        $ingredient = ['starter' => 'Carotte', 'main' => 'Poulet', 'dessert' => 'Pomme'][$course];
+        $ingredients = [
+            'starter' => ['Concombre', 'Carotte', 'Betterave', 'Radis', 'Endive', 'Courgette', 'Poivron', 'Aubergine', 'Panais', 'Céleri', 'Brocoli', 'Chou-fleur', 'Navet', 'Fenouil', 'Asperge', 'Artichaut', 'Tomate'],
+            'main' => ['Tofu', 'Poulet', 'Lentilles', 'Dinde', 'Cabillaud', 'Pois chiches', 'Œufs', 'Sardine', 'Haricots blancs', 'Poulet', 'Truite', 'Lentilles', 'Dinde', 'Maquereau', 'Pois chiches', 'Œufs', 'Saumon'],
+            'dessert' => ['Poire', 'Pomme', 'Banane', 'Kiwi', 'Orange', 'Clémentine', 'Fraise', 'Pêche', 'Abricot', 'Prune', 'Raisin', 'Mangue', 'Ananas', 'Framboise', 'Myrtille', 'Cerise', 'Melon'],
+        ];
+        $ingredient = $ingredients[$course][$number % count($ingredients[$course])];
         $recipe = new Recipe;
         $recipe->forceFill([
             'user_id' => $owner?->id, 'title' => "$ingredient recette $number", 'slug' => "$course-$number", 'description' => 'Une recette simple à cuisiner pour toute la famille.',
@@ -63,6 +69,8 @@ class MealPlanningTest extends TestCase
             $this->recipe($course, 1);
         }
         $this->recipe('main', 2);
+        $this->recipe('starter', 2);
+        $this->recipe('dessert', 2);
         (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
         // The worker claims queued plans; set explicitly for this fixture.
         if (! $plan->fresh()->meals()->exists()) {
@@ -94,7 +102,7 @@ class MealPlanningTest extends TestCase
     {
         $owner = User::factory()->create();
         $plan = $this->savedPlan($owner);
-        $this->actingAs($owner)->get(route('menus.show', $plan))->assertInertia(fn (Assert $page) => $page->component('menus/show')->where('plan.meals.0.recipe_links.main', route('recipes.show', ['recipe' => 'main-1']))->where('shoppingCategories.0.label', 'Légumes')->where('shoppingCategories.0.items.0.quantity', 800));
+        $this->actingAs($owner)->get(route('menus.show', $plan))->assertInertia(fn (Assert $page) => $page->component('menus/show')->where('plan.meals.0.recipe_links.main', route('recipes.show', ['recipe' => 'main-1']))->where('shoppingCategories.0.label', 'Légumes')->where('shoppingCategories.0.items.0.quantity', 400));
     }
 
     public function test_print_contains_only_selected_unique_recipes_with_scaled_amounts_and_no_images(): void
@@ -103,6 +111,8 @@ class MealPlanningTest extends TestCase
         $plan = $this->savedPlan($owner);
         $first = $plan->meals[0];
         $second = $plan->meals[1];
+        // A retained meal may share a recipe: the print export still deduplicates it.
+        $second->update(['starter_recipe_id' => $first->starter_recipe_id, 'snapshot' => ['starter' => $first->snapshot['starter'], ...array_diff_key($second->snapshot, ['starter' => true])]]);
         $response = $this->actingAs($owner)->get(route('menus.print', ['mealPlan' => $plan->id, 'recipes' => [$first->id.':starter', $second->id.':starter']]));
         $response->assertOk()->assertSee('400 g')->assertSee('Préparez les ingrédients')->assertDontSee('Poulet recette')->assertDontSee('<img', false);
         $this->assertSame(1, substr_count($response->getContent(), '<article class="recipe">'));
@@ -363,6 +373,91 @@ class MealPlanningTest extends TestCase
         $this->assertFalse(Recipe::where('is_ai_generated', true)->exists());
         $this->assertSame(0, $plan->meals()->count());
         Http::assertSentCount(3);
+    }
+
+    public function test_similar_dishes_and_vegetable_variants_are_spaced_across_days(): void
+    {
+        foreach (['starter', 'main', 'dessert'] as $course) {
+            for ($number = 0; $number < 17; $number++) {
+                $recipe = $this->recipe($course, $number);
+                if ($course === 'main' && $number < 5) {
+                    $recipe->update(['title' => ['Croziflette savoyarde', 'Tartiflette au reblochon', 'Cabillaud et fondue de poireaux', 'Dinde braisée aux poireaux', 'Poulet aux poireaux'][$number]]);
+                }
+            }
+        }
+        $owner = User::factory()->create();
+        $plan = MealPlan::create(['user_id' => $owner->id, 'title' => 'Menus variés', 'start_date' => '2026-10-19', 'days' => 7, 'people' => 4, 'status' => 'queued', 'criteria' => $this->criteria(7)]);
+        (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
+        $this->assertSame('ready', $plan->fresh()->status, $plan->fresh()->error_message ?? '');
+        $meals = $plan->meals()->orderBy('date')->get();
+        $diversity = app(MenuDiversity::class);
+        foreach ($meals as $index => $meal) {
+            $main = $diversity->profile(PlanningRecipe::fromRecord(Recipe::findOrFail($meal->main_recipe_id)));
+            foreach ($meals->take($index) as $other) {
+                if (abs($meal->date->diffInDays($other->date)) <= 2) {
+                    $previous = $diversity->profile(PlanningRecipe::fromRecord(Recipe::findOrFail($other->main_recipe_id)));
+                    $this->assertTrue($diversity->allowed('main', $main, ['main' => [$previous]]), $meal->snapshot['main']['title'].' / '.$other->snapshot['main']['title']);
+                }
+            }
+        }
+        Http::assertNothingSent();
+    }
+
+    public function test_generated_recipes_are_discoverable_in_the_owners_menu_library_before_moderation(): void
+    {
+        $owner = User::factory()->create();
+        $pending = $this->recipe('main', 1, $owner, 'pending');
+        $pending->forceFill(['is_ai_generated' => true])->save();
+        $this->recipe('main', 2, User::factory()->create(), 'pending')->forceFill(['is_ai_generated' => true])->save();
+        $this->get('/recettes?source=menus')->assertForbidden();
+        $this->get('/recettes')->assertInertia(fn (Assert $page) => $page->where('recipes.total', 0));
+        $this->actingAs($owner)->get('/recettes?source=menus&q=Poulet')->assertInertia(fn (Assert $page) => $page->where('recipes.total', 1)->where('recipes.data.0.slug', $pending->slug)->where('recipes.data.0.private_preview', true));
+        $this->get('/dashboard')->assertInertia(fn (Assert $page) => $page->where('recipes.0.is_ai_generated', true));
+        $this->actingAs(User::factory()->create())->get('/recettes?source=menus')->assertInertia(fn (Assert $page) => $page->where('recipes.total', 0));
+        $pending->update(['status' => 'published', 'published_at' => now()]);
+        $this->get('/recettes')->assertInertia(fn (Assert $page) => $page->where('recipes.total', 1)->where('recipes.data.0.private_preview', false));
+    }
+
+    public function test_replacing_a_course_checks_the_following_locked_meal_and_keeps_its_snapshot(): void
+    {
+        $owner = User::factory()->create();
+        $plan = $this->savedPlan($owner);
+        $locked = $plan->meals[1];
+        $snapshot = $locked->snapshot;
+        $snapshot['main']['title'] = 'Cabillaud et fondue de poireaux';
+        $snapshot['main']['main_ingredient'] = 'cabillaud';
+        $snapshot['main']['ingredients'] = [['name' => 'Poireaux', 'quantity' => 600, 'unit' => 'g']];
+        Recipe::findOrFail($locked->main_recipe_id)->forceFill(collect($snapshot['main'])->only(['title', 'main_ingredient', 'ingredients'])->all())->save();
+        $locked->update(['locked' => true, 'snapshot' => $snapshot]);
+        $this->recipe('main', 3)->update(['title' => 'Poulet aux poireaux', 'total_minutes' => 5]);
+        $alternative = $this->recipe('main', 5);
+        $plan->update(['status' => 'generating']);
+        app(HybridMenuPlanner::class)->generate($plan->fresh(), $plan->meals[0]->id, 'main');
+        $this->assertSame($alternative->id, $plan->meals[0]->fresh()->main_recipe_id);
+        $this->assertSame($snapshot, $locked->fresh()->snapshot);
+        Http::assertNothingSent();
+    }
+
+    public function test_a_repetitive_generated_dish_is_retried_and_only_the_varied_recipe_is_saved(): void
+    {
+        $owner = User::factory()->create();
+        foreach (['starter', 'dessert'] as $course) {
+            $this->recipe($course, 1);
+            $this->recipe($course, 2);
+        }
+        $this->recipe('main', 1);
+        config(['services.openai.key' => 'test-key']);
+        $dish = ['title' => 'Poulet citron et riz', 'description' => 'Un plat familial complet à cuisiner pour le menu.', 'steps' => ['Faites cuire le riz dans une casserole et faites revenir les ingrédients du plat.'], 'course_type' => 'main', 'servings' => 4, 'total_minutes' => 25, 'difficulty' => 1, 'vegetarian' => false, 'main_ingredient' => 'poulet', 'food_groups' => ['starch', 'protein'], 'protein_source' => 'poultry', 'dessert_profile' => null, 'ingredients' => [['name' => 'Poulet', 'quantity' => 500, 'unit' => 'g'], ['name' => 'Riz', 'quantity' => 300, 'unit' => 'g']]];
+        $varied = [...$dish, 'title' => 'Lentilles mijotées et riz', 'vegetarian' => true, 'main_ingredient' => 'lentilles', 'protein_source' => 'legumes', 'ingredients' => [['name' => 'Lentilles', 'quantity' => 500, 'unit' => 'g'], ['name' => 'Riz', 'quantity' => 300, 'unit' => 'g']]];
+        $output = fn ($recipe) => ['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [$recipe]])]]]]];
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($output($dish))->push($output($varied))]);
+        $plan = MealPlan::create(['user_id' => $owner->id, 'title' => 'Menus variés', 'start_date' => '2026-10-19', 'days' => 2, 'people' => 4, 'status' => 'queued', 'criteria' => [...$this->criteria(2), 'meals' => ['lunch']]]);
+        (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
+        $this->assertSame('ready', $plan->fresh()->status, $plan->fresh()->error_message ?? '');
+        $this->assertFalse(Recipe::where('title', $dish['title'])->exists());
+        $this->assertSame('pending', Recipe::where('title', $varied['title'])->firstOrFail()->status);
+        Http::assertSentCount(2);
+        Http::assertSent(fn ($request) => str_contains($request['input'], 'diversity_retry') && str_contains($request['input'], 'avoid_ingredients_by_course'));
     }
 
     public function test_access_and_quick_meal_slots_are_validated_before_queueing(): void

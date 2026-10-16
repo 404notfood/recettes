@@ -91,9 +91,17 @@ export default function MenuShow({
             <Head title="Mon menu de la semaine">
                 <meta name="robots" content="noindex,nofollow" />
             </Head>
-            <Link href="/menus" className="menu-back">
-                <ArrowLeft size={15} /> Mes menus
-            </Link>
+            <nav
+                className="flex flex-wrap gap-x-6"
+                aria-label="Mes menus et recettes"
+            >
+                <Link href="/menus" className="menu-back">
+                    <ArrowLeft size={15} /> Mes menus
+                </Link>
+                <Link href="/recettes?source=menus" className="menu-back">
+                    Mes recettes de menus
+                </Link>
+            </nav>
             <div className="menu-heading">
                 <div>
                     <span className="menu-eyebrow">

@@ -2,6 +2,7 @@ import { retailerFor, retailers, selectedLines, TTL } from './policy.js';
 
 const queues = new Map();
 let writing = false;
+let opening;
 function serial(tabId, task) {
     const previous = queues.get(tabId) || Promise.resolve();
     const current = previous.catch(() => {}).then(task);
@@ -45,7 +46,7 @@ async function status() {
         ],
     });
     return {
-        version: '0.1.1',
+        version: chrome.runtime.getManifest().version,
         tabs: await Promise.all(
             tabs
                 .filter((tab) => retailerFor(tab.url))
@@ -72,6 +73,13 @@ async function status() {
     };
 }
 async function openDrives() {
+    if (opening) return opening;
+    opening = createDriveTabs().finally(() => {
+        opening = undefined;
+    });
+    return opening;
+}
+async function createDriveTabs() {
     const existing = await chrome.tabs.query({
         url: [
             'https://*.leclercdrive.fr/*',
@@ -80,18 +88,23 @@ async function openDrives() {
         ],
     });
     const tabs = [];
+    const errors = [];
     for (const [retailer, site] of Object.entries(retailers)) {
-        const found = existing.find(
-            (tab) =>
-                retailerFor(tab.url) === retailer ||
-                new URL(tab.url).hostname === new URL(site.url).hostname,
-        );
-        const tab =
-            found ||
-            (await chrome.tabs.create({ url: site.url, active: false }));
-        tabs.push({ retailer, tabId: tab.id, created: !found });
+        try {
+            const found = existing.find(
+                (tab) =>
+                    retailerFor(tab.url) === retailer ||
+                    new URL(tab.url).hostname === new URL(site.url).hostname,
+            );
+            const tab =
+                found ||
+                (await chrome.tabs.create({ url: site.url, active: false }));
+            tabs.push({ retailer, tabId: tab.id, created: !found });
+        } catch (error) {
+            errors.push({ retailer, error: error.message });
+        }
     }
-    return { tabs };
+    return { tabs, errors };
 }
 async function search(payload) {
     const { tabId, retailer, query } = payload;
@@ -244,6 +257,12 @@ async function run(id) {
     return job;
 }
 async function dispatch(message, sender) {
+    // The popup can open only the three fixed retailer URLs, without a site bridge.
+    if (
+        sender.url === chrome.runtime.getURL('popup.html') &&
+        message.operation === 'open'
+    )
+        return openDrives();
     const review =
         sender.url?.split('?')[0] === chrome.runtime.getURL('review.html');
     if (review) {
@@ -271,6 +290,8 @@ async function dispatch(message, sender) {
         new URL(sender.url).origin !== appOrigin
     )
         throw new Error('Reliez ce site depuis l’icône de l’extension.');
+    if (message.operation === 'ping')
+        return { version: chrome.runtime.getManifest().version };
     if (message.operation === 'status') return status();
     if (message.operation === 'open') return openDrives();
     if (message.operation === 'search') return search(message.payload || {});

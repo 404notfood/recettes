@@ -4,6 +4,7 @@ import { test } from 'node:test';
 let listener;
 let executed = 0;
 let driveTabs = [];
+let refusedUrl;
 const opened = [];
 const data = {
     'j:aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa': {
@@ -23,6 +24,7 @@ globalThis.chrome = {
         },
     },
     runtime: {
+        getManifest: () => ({ version: '0.1.2' }),
         getURL: (path) => `chrome-extension://test-extension/${path}`,
         onMessage: {
             addListener: (fn) => {
@@ -36,6 +38,7 @@ globalThis.chrome = {
             return driveTabs;
         },
         create: async (options) => {
+            if (options.url === refusedUrl) throw new Error('Onglet refusé');
             opened.push(options);
             const tab = { id: 100 + opened.length, url: options.url };
             driveTabs.push(tab);
@@ -61,7 +64,7 @@ await test('unpaired origins and subframes cannot read retailer sessions', async
         assert.ok((await send('status', sender)).error);
     }
     assert.equal(executed, 0);
-    assert.equal((await send('status', site)).value.version, '0.1.1');
+    assert.equal((await send('status', site)).value.version, '0.1.2');
     assert.equal(executed, 1);
 });
 await test('the paired site cannot confirm or cancel transfers directly', async () => {
@@ -139,4 +142,39 @@ await test('an existing selected Leclerc store does not prevent opening the othe
     assert.equal(response.value.tabs[0].tabId, 42);
     assert.equal(response.value.tabs[0].created, false);
     assert.equal(response.value.tabs.filter((tab) => tab.created).length, 2);
+});
+
+await test('the popup can open fixed drive URLs without a paired page but cannot read sessions', async () => {
+    const popup = { url: 'chrome-extension://test-extension/popup.html' };
+    driveTabs = [];
+    assert.equal((await send('open', popup)).value.tabs.length, 3);
+    assert.ok((await send('status', popup)).error);
+});
+
+await test('a failed retailer does not stop the other tabs and is reported', async () => {
+    driveTabs = [];
+    refusedUrl = 'https://www.carrefour.fr/';
+    const response = await send('open', site);
+    assert.deepEqual(
+        response.value.tabs.map((tab) => tab.retailer),
+        ['leclerc', 'intermarche'],
+    );
+    assert.deepEqual(response.value.errors, [
+        { retailer: 'carrefour', error: 'Onglet refusé' },
+    ]);
+    refusedUrl = undefined;
+});
+
+await test('concurrent opening requests reuse one operation and ping does not inspect stores', async () => {
+    driveTabs = [];
+    const before = opened.length;
+    const requests = await Promise.all([
+        send('open', site),
+        send('open', site),
+    ]);
+    assert.equal(opened.length - before, 3);
+    assert.deepEqual(requests[0], requests[1]);
+    const queries = executed;
+    assert.equal((await send('ping', site)).value.version, '0.1.2');
+    assert.equal(executed, queries);
 });
