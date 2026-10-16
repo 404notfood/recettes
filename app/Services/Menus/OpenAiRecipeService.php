@@ -35,11 +35,11 @@ class OpenAiRecipeService
             ['recipes' => $recipes],
             $this->arraySchema('recipes', $this->objectSchema($properties))
         );
-        Validator::make($data, [
+        $this->validateResponse($data, [
             'recipes' => 'required|array|size:'.count($recipes),
             'recipes.*.id' => 'required|integer|distinct',
             ...$this->metadataRules('recipes.*.'),
-        ])->validate();
+        ], 'enrich');
         if (! is_array($data['recipes'])) {
             throw new PlanningException('La liste des recettes est illisible.');
         }
@@ -88,7 +88,7 @@ class OpenAiRecipeService
             $context,
             $this->arraySchema('recipes', $recipe)
         );
-        Validator::make($data, [
+        $this->validateResponse($data, [
             'recipes' => 'required|array|size:'.count($context['missing_courses']),
             'recipes.*.title' => 'required|string|max:150|distinct',
             'recipes.*.description' => 'required|string|min:20|max:2000',
@@ -99,7 +99,7 @@ class OpenAiRecipeService
             'recipes.*.ingredients.*.name' => 'required|string|max:255',
             'recipes.*.ingredients.*.quantity' => 'required|numeric|gt:0|max:100000',
             'recipes.*.ingredients.*.unit' => 'required|in:g,ml,pièce,c. à soupe,c. à café,pincée',
-        ])->validate();
+        ], 'generate');
         if (! is_array($data['recipes'])) {
             throw new PlanningException('La liste des recettes proposées est illisible.');
         }
@@ -110,6 +110,21 @@ class OpenAiRecipeService
         }
 
         return $this->recipeRows($data['recipes']);
+    }
+
+    /**
+     * @param  array<string,mixed>  $data
+     * @param  array<string,string>  $rules
+     */
+    private function validateResponse(array $data, array $rules, string $operation): void
+    {
+        $validator = Validator::make($data, $rules);
+        if ($validator->fails()) {
+            throw new PlanningException('Les recettes proposées par le service sont incomplètes ou incohérentes. Réessayez la génération.', [
+                'operation' => $operation,
+                'validation_rules' => array_map(fn ($failed) => array_keys($failed), $validator->failed()),
+            ]);
+        }
     }
 
     /** @param array<mixed> $rows
@@ -151,15 +166,21 @@ class OpenAiRecipeService
                         'type' => 'json_schema', 'name' => 'meal_recipes', 'strict' => true, 'schema' => $schema,
                     ]],
                 ]);
-        } catch (Throwable) {
-            throw new PlanningException('Le service de création de recettes est momentanément inaccessible. Réessayez plus tard.');
+        } catch (Throwable $error) {
+            throw new PlanningException('Le service de création de recettes est momentanément inaccessible. Réessayez plus tard.', [
+                'stage' => 'transport', 'exception_class' => $error::class,
+            ]);
         }
         if (! $response->successful()) {
+            $code = $response->json('error.code');
             throw new PlanningException(match ($response->status()) {
                 401, 403 => 'La clé API ne permet pas la création de recettes. Vérifiez la configuration du serveur.',
                 429 => 'Le service de recettes a atteint sa limite. Vérifiez le quota API ou réessayez plus tard.',
                 default => 'Le service de recettes n’a pas pu répondre. Réessayez plus tard.',
-            });
+            }, [
+                'stage' => 'api', 'http_status' => $response->status(),
+                'api_code' => in_array($code, ['insufficient_quota', 'rate_limit_exceeded', 'invalid_api_key', 'model_not_found', 'invalid_json_schema'], true) ? $code : 'unknown',
+            ]);
         }
         if ($response->json('status') !== 'completed') {
             throw new PlanningException('La création des recettes n’a pas été terminée. Aucun planning incomplet n’a été enregistré.');

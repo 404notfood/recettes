@@ -25,6 +25,12 @@ const recipe = {
     steps: ['Préparer les ingrédients.'],
 };
 const fixtures = {
+    welcome: {
+        auth: { user: null },
+        recipes: [],
+        categories: [],
+        recipeCount: 0,
+    },
     'menus/index': {
         plans: [],
         aiConfigured: false,
@@ -45,7 +51,7 @@ const fixtures = {
 for (const [component, props] of Object.entries(fixtures)) {
     const page = {
         component,
-        url: '/menus/1',
+        url: component === 'welcome' ? '/' : '/menus/1',
         version: null,
         props: {
             auth: { user },
@@ -64,7 +70,9 @@ for (const [component, props] of Object.entries(fixtures)) {
     if (
         !response.ok ||
         typeof rendered.body !== 'string' ||
-        !rendered.body.includes('menu-page')
+        !rendered.body.includes(
+            component === 'welcome' ? 'home-hero' : 'menu-page',
+        )
     ) {
         throw new Error(
             `Le SSR actif ne rend pas ${component}. Recompiler avec npm run build et redémarrer le processus SSR. ${rendered.error ?? ''}`,

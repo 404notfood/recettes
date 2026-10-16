@@ -122,7 +122,7 @@ sudo systemctl restart cuistot-recettes-ssr
 
 ## 6. Contrôler puis mettre à jour
 
-`npm run build` compile maintenant les assets du navigateur **et** le bundle SSR, puis vérifie la présence des trois pages des menus et de leurs fichiers compilés. `npm run build:ssr` reste un alias de cette compilation complète. Ne pas déployer uniquement `public/build` : le dossier `bootstrap/ssr` appartient à la même version.
+`npm run build` compile maintenant les assets du navigateur **et** le bundle SSR, puis vérifie la présence de l'accueil, des quatre pages des menus et de leurs fichiers compilés. `npm run build:ssr` reste un alias de cette compilation complète. Ne pas déployer uniquement `public/build` : le dossier `bootstrap/ssr` appartient à la même version.
 
 Une erreur `Page not found: menus/show` indique que le processus SSR ne dispose pas de la page des menus. Compiler les deux bundles puis redémarrer le SSR : le processus Node conserve les modules chargés avant la recompilation.
 
@@ -138,7 +138,30 @@ php artisan inertia:start-ssr
 
 La dernière commande démarre le SSR au premier plan. Si un service systemd, Supervisor ou autre gestionnaire le supervise déjà, redémarrer ce service après compilation à la place du démarrage manuel ; ne pas lancer deux processus sur le même port. Le nom du service dépend de l'installation.
 
-Après installation des scripts de vérification de cette version, `npm run check:ssr` contrôle aussi le processus réellement actif : il demande le rendu de `menus/index`, `menus/show` et `menus/recipe` avec des données fictives, sans accès à la base ni à OpenAI.
+Après installation des scripts de vérification de cette version, `npm run check:ssr` contrôle aussi le processus réellement actif : il demande le rendu de `welcome`, `menus/index`, `menus/show`, `menus/recipe` et `menus/drives` avec des données fictives, sans accès à la base ni à OpenAI.
+
+Pour `Page not found: home` sur `/`, vérifier aussi les sources PHP déployées : l'accueil de cette version est le composant **`welcome`**, dans `resources/js/pages/welcome.tsx`. La méthode `RecipeController::home()` doit appeler `Inertia::render('welcome', ...)`. Le nom de route `home` peut être conservé ; il ne désigne pas le composant React. Recompiler uniquement le JavaScript ne corrige pas un contrôleur qui demande encore `home`.
+
+```bash
+grep -n 'Inertia::render' app/Http/Controllers/RecipeController.php
+ls resources/js/pages/welcome.tsx
+```
+
+Mettre à jour les sources PHP et JavaScript de la même version, puis compiler et redémarrer le SSR comme ci-dessus. Si le fichier PHP demande bien `welcome` mais que de nouvelles erreurs mentionnent toujours `home`, vérifier le dossier réellement servi par le virtual host et recharger le service PHP-FPM concerné pour renouveler son OPcache. Les scripts de vérification incluent désormais l'accueil `welcome` dans les bundles et dans le rendu actif.
+
+Une erreur de génération des menus est distincte d'une erreur de rendu SSR. Le worker doit être redémarré après la mise à jour du code :
+
+```bash
+php artisan queue:restart
+```
+
+Le worker dédié doit être supervisé et écouter `queue:work menus --queue=menus --tries=1 --timeout=3600`. Pour un lancement manuel, cette commande reste au premier plan. Après une nouvelle tentative de génération, le diagnostic filtré est disponible avec :
+
+```bash
+grep 'menus.generation_failed' storage/logs/laravel.log | tail -n 5
+```
+
+Ce diagnostic contient l'identifiant du planning, la classe de l'erreur, son fichier et sa ligne. Pour une réponse de recettes invalide, `diagnostics.operation` distingue `enrich` et `generate`, et `validation_rules` indique les champs et règles refusés. Pour une erreur HTTP, le statut et un code API reconnu permettent de distinguer notamment quota et limite de débit. Les messages bruts des exceptions, réponses du fournisseur, clés et préférences privées ne sont pas journalisés. Les anciennes erreurs déjà interceptées ne peuvent pas être reconstituées ; il faut refaire un essai après mise à jour et redémarrage du worker.
 
 Vérifier `/`, `/recettes`, une fiche de recette avec sa photo et son crédit, `/sitemap.xml`, une proposition anonyme et un e-mail de vérification reçu dans une vraie boîte. Compléter les informations de l'éditeur dans la page de confidentialité avant l'ouverture publique.
 

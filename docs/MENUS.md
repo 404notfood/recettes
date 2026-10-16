@@ -34,13 +34,15 @@ php artisan queue:restart
 composer menus:work
 ```
 
-`npm run build` et `npm run build:ssr` produisent tous deux les bundles navigateur et SSR et vérifient que les pages des menus sont incluses. Après recompilation, redémarrer le processus SSR selon son mode de supervision. `npm run check:ssr` vérifie le rendu des trois pages dans le processus actif.
+`npm run build` et `npm run build:ssr` produisent tous deux les bundles navigateur et SSR et vérifient que l'accueil et les quatre pages des menus sont inclus. Après recompilation, redémarrer le processus SSR selon son mode de supervision. `npm run check:ssr` vérifie leur rendu dans le processus actif.
 
 Le worker dédié écoute la connexion `menus`, la file `menus`, avec une seule tentative, un timeout de 3600 secondes et une réservation de 3700 secondes. En production, le superviser séparément du worker par défaut. Sans clé, seules les combinaisons réalisables avec les recettes existantes peuvent aboutir ; le planning explique quand des recettes supplémentaires sont nécessaires.
 
 Le modèle `deploy/menus-worker.service.template` permet de créer ce service sur le VPS, en remplaçant `__PROJECT__` par `cuistot-recettes` et `__PHP__` par le chemin du PHP installé. L'installer sous un nom distinct, par exemple `cuistot-recettes-menus.service`. Aucun déploiement du VPS n'est effectué par l'intégration locale.
 
 Les appels OpenAI utilisent Responses avec un schéma strict et n'ont pas de relance automatique. Les recettes et repas sont enregistrés ensemble après validation complète. Un échec de régénération conserve les anciens repas. Les appels déjà effectués peuvent être facturés par le fournisseur.
+
+En cas d'échec, le journal Laravel contient une entrée `menus.generation_failed` avec l'identifiant du planning et un diagnostic filtré. Les réponses de recettes incomplètes sont signalées comme telles au visiteur ; les pannes imprévues affichent un message technique sans lui demander de modifier ses critères. Le journal conserve la classe, le fichier et la ligne de l'erreur, les noms des champs et règles de validation concernés, ou le statut HTTP et un code API reconnu. Il ne conserve ni exception brute, ni clé, ni réponse complète du fournisseur, ni préférences privées. Après déploiement de ce correctif, redémarrer le worker puis refaire un essai : les erreurs auparavant interceptées sans journal ne sont pas récupérables.
 
 ## Vérifications
 

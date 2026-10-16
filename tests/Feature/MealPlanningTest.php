@@ -9,9 +9,12 @@ use App\Models\Recipe;
 use App\Models\User;
 use App\Services\Menus\CatalogueMetadata;
 use App\Services\Menus\HybridMenuPlanner;
+use App\Services\Menus\OpenAiRecipeService;
+use App\Services\Menus\PlanningException;
 use App\Services\Menus\PlanningRecipe;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Inertia\Testing\AssertableInertia as Assert;
 use Tests\TestCase;
@@ -147,6 +150,105 @@ class MealPlanningTest extends TestCase
         $this->actingAs($owner)->get(route('recipes.show', ['recipe' => $created->slug]))->assertOk();
         $this->actingAs(User::factory()->create())->get(route('recipes.show', ['recipe' => $created->slug]))->assertNotFound();
         Http::assertSentCount(1);
+    }
+
+    public function test_invalid_generated_recipe_is_diagnosed_without_logging_private_values(): void
+    {
+        Log::spy();
+        $owner = User::factory()->create();
+        $this->recipe('starter', 1);
+        $this->recipe('main', 1);
+        config(['services.openai.key' => 'private-test-key']);
+        $data = ['title' => 'Dessert privé', 'description' => 'secret-prompt', 'steps' => ['Préparez les pommes et servez-les en petits morceaux.'], 'course_type' => 'dessert', 'servings' => 4, 'total_minutes' => 10, 'difficulty' => 1, 'vegetarian' => true, 'main_ingredient' => 'pomme', 'food_groups' => ['fruit'], 'protein_source' => null, 'dessert_profile' => 'fruit', 'ingredients' => [['name' => 'Pomme', 'quantity' => 4, 'unit' => 'pièce']]];
+        Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [$data]])]]]]])]);
+        $plan = MealPlan::create(['user_id' => $owner->id, 'title' => 'Menu', 'start_date' => '2026-10-19', 'days' => 1, 'people' => 4, 'status' => 'queued', 'criteria' => [...$this->criteria(), 'meals' => ['lunch'], 'preferences' => 'private-preferences']]);
+
+        (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
+
+        $this->assertSame('failed', $plan->fresh()->status);
+        $this->assertStringContainsString('recettes proposées par le service', $plan->fresh()->error_message);
+        $this->assertSame(0, $plan->meals()->count());
+        $this->assertFalse(Recipe::where('is_ai_generated', true)->exists());
+        Log::shouldHaveReceived('error')->once()->withArgs(function (string $message, array $context) use ($plan) {
+            $this->assertSame('menus.generation_failed', $message);
+            $this->assertSame($plan->id, $context['plan_id']);
+            $this->assertSame('generate', $context['diagnostics']['operation']);
+            $this->assertSame(['Min'], $context['diagnostics']['validation_rules']['recipes.0.description']);
+            foreach (['private-test-key', 'secret-prompt', 'private-preferences', 'Dessert privé'] as $private) {
+                $this->assertStringNotContainsString($private, json_encode($context, JSON_UNESCAPED_UNICODE));
+            }
+
+            return true;
+        });
+        Http::assertSentCount(1);
+    }
+
+    public function test_invalid_enrichment_reports_field_rules_without_response_values(): void
+    {
+        config(['services.openai.key' => 'private-test-key']);
+        Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [['id' => 1, 'main_ingredient' => 'private-ingredient']]])]]]]])]);
+
+        try {
+            app(OpenAiRecipeService::class)->enrich([['id' => 1, 'title' => 'Recette privée']]);
+            $this->fail('Une réponse incomplète ne doit pas être acceptée.');
+        } catch (PlanningException $error) {
+            $this->assertSame('enrich', $error->diagnostics['operation']);
+            $this->assertSame(['Required'], $error->diagnostics['validation_rules']['recipes.0.course_type']);
+            $this->assertStringNotContainsString('private-ingredient', json_encode($error->diagnostics));
+        }
+        Http::assertSentCount(1);
+    }
+
+    public function test_unexpected_generation_error_keeps_existing_meals_and_logs_only_its_location(): void
+    {
+        $owner = User::factory()->create();
+        $plan = $this->savedPlan($owner);
+        $before = $plan->meals->toArray();
+        $plan->update(['status' => 'queued']);
+        Log::spy();
+        $planner = $this->mock(HybridMenuPlanner::class);
+        $planner->shouldReceive('generate')->once()->andThrow(new \RuntimeException('private-test-key private-prompt'));
+
+        (new GenerateMealPlan($plan->id))->handle($planner);
+
+        $this->assertSame('failed', $plan->fresh()->status);
+        $this->assertSame('Un problème technique a interrompu la génération. Réessayez plus tard.', $plan->fresh()->error_message);
+        $this->assertSame($before, $plan->fresh()->meals->toArray());
+        Log::shouldHaveReceived('error')->once()->withArgs(function (string $message, array $context) {
+            $this->assertSame('menus.generation_failed', $message);
+            $this->assertSame(\RuntimeException::class, $context['exception_class']);
+            $this->assertNotEmpty($context['file']);
+            $this->assertGreaterThan(0, $context['line']);
+            $this->assertArrayNotHasKey('exception', $context);
+            $this->assertStringNotContainsString('private-test-key', json_encode($context));
+            $this->assertStringNotContainsString('private-prompt', json_encode($context));
+
+            return true;
+        });
+        Http::assertNothingSent();
+    }
+
+    public function test_api_failure_diagnostics_distinguish_quota_and_rate_limits_and_filter_unknown_codes(): void
+    {
+        config(['services.openai.key' => 'private-test-key']);
+        $codes = ['insufficient_quota', 'rate_limit_exceeded', 'private-upstream-code'];
+        $responses = Http::sequence();
+        foreach ($codes as $code) {
+            $responses->push(['error' => ['code' => $code, 'message' => 'private-response-body']], 429);
+        }
+        Http::fake(['api.openai.com/*' => $responses]);
+        foreach ($codes as $code) {
+            try {
+                app(OpenAiRecipeService::class)->generate(['missing_courses' => ['dessert']]);
+                $this->fail('Une erreur API ne doit pas être acceptée.');
+            } catch (PlanningException $error) {
+                $this->assertSame(429, $error->diagnostics['http_status']);
+                $this->assertSame($code === 'private-upstream-code' ? 'unknown' : $code, $error->diagnostics['api_code']);
+                $this->assertStringNotContainsString('private-', json_encode($error->diagnostics));
+                $this->assertStringNotContainsString('private-', $error->getMessage());
+            }
+        }
+        Http::assertSentCount(3);
     }
 
     public function test_access_and_quick_meal_slots_are_validated_before_queueing(): void

@@ -14,6 +14,7 @@ const ssr = JSON.parse(
 const entry = readFileSync(resolve(ssrRoot, 'app.js'), 'utf8');
 
 for (const name of [
+    'welcome',
     'menus/index',
     'menus/show',
     'menus/recipe',
@@ -40,5 +41,5 @@ for (const name of [
     }
 }
 console.log(
-    'Build navigateur et SSR vérifié : les pages des menus et des drives sont présentes.',
+    'Build navigateur et SSR vérifié : accueil, menus et drives présents.',
 );
