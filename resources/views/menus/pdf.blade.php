@@ -28,7 +28,7 @@
     .note { margin-top: 6pt; }
 </style></head><body>
 <table class="masthead"><tr><td class="brand">cuistot<span class="brand-dot">.</span> <span class="club">CLUB</span></td><td class="edition">LE CARNET DU FOYER / SEMAINE {{ $week }}</td></tr></table><div class="rule"></div>
-<table class="intro"><tr><td><div class="eyebrow">LES BONNES IDÉES FINISSENT DANS L’ASSIETTE</div><h1>On passe à table.</h1><div class="subtitle">{{ $dateLabel }}</div></td><td class="badge">{{ $plan->people }} {{ $plan->people > 1 ? 'personnes' : 'personne' }}<br><span class="subtitle">Entrée, plat & dessert @if($plan->criteria['vegetarian'] ?? false)<br>Menus végétariens @endif</span></td></tr></table>
+<table class="intro"><tr><td><div class="eyebrow">LES BONNES IDÉES FINISSENT DANS L’ASSIETTE</div><h1>On passe à table.</h1><div class="subtitle">{{ $dateLabel }}</div></td><td class="badge">{{ $plan->people }} {{ $plan->people > 1 ? 'personnes' : 'personne' }}<br><span class="subtitle">{{ implode(', ', array_map(fn ($course) => \App\Services\Menus\MenuOptions::COURSES[$course], \App\Services\Menus\MenuOptions::courses($plan->criteria))) }} @if($plan->criteria['vegetarian'] ?? false)<br>Menus végétariens @endif</span></td></tr></table>
 <table class="planning"><thead><tr><th class="day">Cette semaine</th><th class="meal">Le midi</th><th class="meal">Le soir</th></tr></thead><tbody>
 @foreach($days as $date => $meals)
     @php($day = \Carbon\CarbonImmutable::parse($date)->locale('fr'))
@@ -39,6 +39,7 @@
             @if($meal)
                 <div class="time">{{ $meal->total_minutes }} min @if($meal->quick) / <span class="quick">Vite fait, bien fait</span>@endif</div>
                 @foreach(['starter' => 'Entrée', 'main' => 'Plat', 'dessert' => 'Dessert'] as $course => $label)
+                    @continue(!isset($meal->snapshot[$course]))
                     <div class="course"><span class="label">{{ $label }}</span> &nbsp; <a href="{{ $recipeLink($meal, $course) }}">{{ $recipeTitle($meal->snapshot[$course]['title']) }}</a></div>
                     @if($course === 'main' && !empty($meal->snapshot[$course]['accompaniment']))
                         <div class="course"><span class="label">Accomp.</span> &nbsp; {{ $recipeTitle($meal->snapshot[$course]['accompaniment']) }}</div>

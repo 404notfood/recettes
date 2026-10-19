@@ -49,6 +49,7 @@ h2 { font: 20px Georgia, serif; background: #eef0e4; padding: 8px; margin: 0; }
 @php($meal = $byDate->get($date->format('Y-m-d'), collect())->firstWhere('meal_type', $type))
 <td>@if($meal)<small>{{ $meal->total_minutes }} min</small>
 @foreach(['starter' => 'Entrée', 'main' => 'Plat', 'dessert' => 'Dessert'] as $course => $label)
+@continue(!isset($meal->snapshot[$course]))
 <div class="course"><span>{{ $label }}</span>{{ $meal->snapshot[$course]['title'] ?? '' }}</div>
 @if($course === 'main' && !empty($meal->snapshot[$course]['accompaniment']))<div class="course"><span>Accompagnement</span>{{ $meal->snapshot[$course]['accompaniment'] }}</div>@endif
 @endforeach

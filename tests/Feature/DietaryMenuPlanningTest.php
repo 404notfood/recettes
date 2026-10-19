@@ -8,8 +8,12 @@ use App\Models\MealPlan;
 use App\Models\Recipe;
 use App\Models\User;
 use App\Services\Menus\HybridMenuPlanner;
+use App\Services\Menus\MenuOptions;
+use App\Services\Menus\MenuPdfExporter;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
 use Inertia\Testing\AssertableInertia as Assert;
@@ -75,21 +79,33 @@ class DietaryMenuPlanningTest extends TestCase
         Http::assertNothingSent();
     }
 
-    public function test_generated_recipes_cannot_bypass_allergens_or_seasonality(): void
+    public function test_three_allergen_rejections_are_logged_without_private_recipe_data(): void
     {
         $this->recipe('starter');
         $this->recipe('main');
         config(['services.openai.key' => 'test-not-a-secret']);
-        foreach (['Beurre', 'Fraise fraîche'] as $ingredient) {
-            $data = ['title' => 'Dessert pour le menu', 'description' => 'Un dessert maison pour terminer le repas.', 'steps' => ['Préparez et mélangez les ingrédients puis servez frais.'], 'course_type' => 'dessert', 'servings' => 2, 'total_minutes' => 5, 'difficulty' => 1, 'vegetarian' => true, 'main_ingredient' => 'Pomme', 'food_groups' => ['fruit'], 'protein_source' => null, 'dessert_profile' => 'fruit', 'allergens' => [], 'accompaniment' => null, 'ingredients' => [['name' => $ingredient, 'quantity' => 200, 'unit' => 'g']]];
-            Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => [['type' => 'message', 'content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [$data]])]]]]])]);
-            $plan = $this->plan(['allergens' => ['milk']]);
-            $this->assertSame('failed', $plan->status, $ingredient);
-            $this->assertCount(0, $plan->meals);
-            $this->assertSame(2, Recipe::count());
-            Http::assertSentCount(1);
-            Http::assertSent(fn ($request) => json_decode($request['input'], true)['excluded_allergens'] === ['milk'] && json_decode($request['input'], true)['seasonal'] === true);
-        }
+        Log::spy();
+        $data = $this->generatedDessert('Beurre', 'Dessert pour le menu');
+        Http::fake(['api.openai.com/*' => Http::response($this->apiResponse($data))]);
+        $plan = $this->plan(['allergens' => ['milk']]);
+        $this->assertSame('failed', $plan->status);
+        $this->assertCount(0, $plan->meals);
+        $this->assertSame(2, Recipe::count());
+        Http::assertSentCount(3);
+        Log::shouldHaveReceived('error')->withArgs(function (string $message, array $context) use ($plan) {
+            if ($context['plan_id'] !== $plan->id) {
+                return false;
+            }
+            $this->assertSame('menus.generation_failed', $message);
+            $this->assertSame('eligibility', $context['diagnostics']['stage']);
+            $this->assertSame(3, $context['diagnostics']['attempts']);
+            $this->assertContains('allergen_conflict', $context['diagnostics']['rejections'][0]['reason_codes']);
+            $this->assertStringNotContainsString('Dessert pour le menu', json_encode($context));
+            $this->assertStringNotContainsString('test-not-a-secret', json_encode($context));
+
+            return true;
+        })->once();
+        Http::assertSent(fn ($request) => json_decode($request['input'], true)['excluded_allergens'] === ['milk'] && json_decode($request['input'], true)['seasonal'] === true);
     }
 
     public function test_new_rules_preserve_existing_diversity_in_a_two_week_plan(): void
@@ -155,5 +171,288 @@ class DietaryMenuPlanningTest extends TestCase
         $recipe->update(['allergens' => []]);
         $recipe->update(['ingredients' => [['name' => 'Riz', 'quantity' => 200, 'unit' => 'g']], 'allergens' => []]);
         $this->assertSame([], $recipe->fresh()->allergens);
+    }
+
+    private function generatedDessert(string $ingredient, string $title): array
+    {
+        return ['title' => $title, 'description' => 'Un dessert maison pour terminer le repas.', 'steps' => ['Préparez les ingrédients puis servez immédiatement.'], 'course_type' => 'dessert', 'servings' => 2, 'total_minutes' => 5, 'difficulty' => 1, 'vegetarian' => true, 'main_ingredient' => $ingredient, 'food_groups' => ['fruit'], 'protein_source' => null, 'dessert_profile' => 'fruit', 'allergens' => [], 'accompaniment' => null, 'ingredients' => [['name' => $ingredient, 'quantity' => 200, 'unit' => 'g']]];
+    }
+
+    private function apiResponse(array $recipe): array
+    {
+        return ['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipes' => [$recipe]])]]]]];
+    }
+
+    public function test_rejected_proposal_is_corrected_and_only_the_valid_recipe_is_saved(): void
+    {
+        $this->recipe('starter');
+        $this->recipe('main');
+        config(['services.openai.key' => 'test-not-a-secret']);
+        $bad = $this->generatedDessert('Beurre', 'Proposition à refuser');
+        $good = $this->generatedDessert('Poire', 'Poire fraîche pour le menu');
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($this->apiResponse($bad))->push($this->apiResponse($good))]);
+        $plan = $this->plan(['allergens' => ['milk']]);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame(3, Recipe::count());
+        $this->assertFalse(Recipe::where('title', $bad['title'])->exists());
+        $this->assertSame($good['title'], $plan->meals->first()->snapshot['dessert']['title']);
+        Http::assertSentCount(2);
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+
+            return isset($input['validation_feedback'])
+                && in_array('allergen_conflict', $input['validation_feedback']['rejections'][0]['reason_codes'], true)
+                && $input['excluded_allergens'] === ['milk'];
+        });
+    }
+
+    public function test_absence_labels_do_not_abort_a_generated_recipe(): void
+    {
+        $this->recipe('starter');
+        $this->recipe('main');
+        config(['services.openai.key' => 'test-not-a-secret']);
+        Http::fake(['api.openai.com/*' => Http::response($this->apiResponse($this->generatedDessert('Poire', 'Poire sans porc ni alcool')))]);
+        $plan = $this->plan(['diets' => ['no_pork', 'no_alcohol']]);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        Http::assertSentCount(1);
+    }
+
+    public function test_three_rejected_proposals_leave_an_existing_menu_intact(): void
+    {
+        foreach (['starter', 'main', 'dessert'] as $course) {
+            $this->recipe($course);
+        }
+        $plan = $this->plan(['allergens' => ['milk']]);
+        $this->assertSame('ready', $plan->status);
+        $before = $plan->meals->toArray();
+        config(['services.openai.key' => 'test-not-a-secret']);
+        Http::fake(['api.openai.com/*' => Http::response($this->apiResponse($this->generatedDessert('Beurre', 'Dessert refusé')))]);
+        $plan->update(['status' => 'queued']);
+        (new GenerateMealPlan($plan->id, $plan->meals->first()->id, 'dessert'))->handle(app(HybridMenuPlanner::class));
+        $this->assertSame('failed', $plan->fresh()->status);
+        $this->assertStringContainsString('allergène exclu identifié', $plan->fresh()->error_message);
+        $this->assertSame($before, $plan->fresh()->meals->toArray());
+        $this->assertSame(3, Recipe::count());
+        Http::assertSentCount(3);
+    }
+
+    public function test_seasonal_no_repeat_generation_corrects_an_out_of_season_dessert_without_diet_exclusions(): void
+    {
+        $this->recipe('starter');
+        $this->recipe('main');
+        config(['services.openai.key' => 'test-not-a-secret']);
+        $bad = $this->generatedDessert('Fraise fraîche', 'Fraises pour le menu');
+        $good = $this->generatedDessert('Poire', 'Poire de saison pour le menu');
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($this->apiResponse($bad))->push($this->apiResponse($good))]);
+        $plan = $this->plan(['seasonal' => true, 'variety' => 'varied', 'allergens' => [], 'diets' => [], 'excluded' => []]);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($good['title'], $plan->meals->first()->snapshot['dessert']['title']);
+        $this->assertFalse(Recipe::where('title', $bad['title'])->exists());
+        Http::assertSentCount(2);
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+
+            return isset($input['validation_feedback'])
+                && $input['variety'] === 'varied' && $input['seasonal'] === true
+                && $input['diets'] === [] && $input['excluded_allergens'] === []
+                && in_array('poire', $input['seasonal_produce'], true)
+                && ! in_array('fraise', $input['seasonal_produce'], true)
+                && in_array('out_of_season', $input['validation_feedback']['rejections'][0]['reason_codes'], true);
+        });
+    }
+
+    public function test_seasonal_catalogue_priority_is_applied_before_the_twenty_candidate_limit(): void
+    {
+        for ($i = 0; $i < 21; $i++) {
+            $this->recipe('starter', ['title' => 'Courgette '.$i, 'main_ingredient' => 'Courgette'], ['Courgette']);
+        }
+        $seasonal = $this->recipe('starter', ['title' => 'Carottes râpées', 'total_minutes' => 20]);
+        $this->recipe('main');
+        $this->recipe('dessert');
+        $plan = $this->plan();
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($seasonal->id, $plan->meals->first()->starter_recipe_id);
+        Http::assertNothingSent();
+    }
+
+    public function test_seasonal_priority_can_fall_back_to_another_vegetable_to_complete_a_menu(): void
+    {
+        $fallback = $this->recipe('starter', ['title' => 'Courgettes râpées', 'main_ingredient' => 'Courgette'], ['Courgette']);
+        $this->recipe('starter', ['title' => 'Carottes trop longues', 'total_minutes' => 80]);
+        $this->recipe('main');
+        $this->recipe('dessert');
+        $plan = $this->plan();
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($fallback->id, $plan->meals->first()->starter_recipe_id);
+        Http::assertNothingSent();
+    }
+
+    public function test_fresh_strawberries_are_skipped_in_the_october_catalogue_but_frozen_are_allowed(): void
+    {
+        $this->recipe('starter');
+        $this->recipe('main');
+        $this->recipe('dessert', ['title' => 'Fraises fraîches rapides', 'main_ingredient' => 'Fraise', 'total_minutes' => 1], ['Fraises fraîches']);
+        $frozen = $this->recipe('dessert', ['title' => 'Fraises surgelées', 'main_ingredient' => 'Fraise'], ['Fraises surgelées']);
+        $plan = $this->plan();
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($frozen->id, $plan->meals->first()->dessert_recipe_id);
+        Http::assertNothingSent();
+    }
+
+    public function test_generated_recipe_just_outside_the_calendar_can_be_used_with_seasonal_priority(): void
+    {
+        $this->recipe('starter');
+        $this->recipe('main');
+        config(['services.openai.key' => 'test-not-a-secret']);
+        $dessert = $this->generatedDessert('Kiwi', 'Kiwi pour compléter le menu');
+        Http::fake(['api.openai.com/*' => Http::response($this->apiResponse($dessert))]);
+        $plan = $this->plan();
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($dessert['title'], $plan->meals->first()->snapshot['dessert']['title']);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => in_array('fraise', json_decode($request['input'], true)['excluded_fresh_produce'], true));
+    }
+
+    public function test_varied_generation_explicitly_requests_a_complete_main_and_corrects_an_incomplete_proposal(): void
+    {
+        $this->recipe('starter');
+        $this->recipe('dessert');
+        config(['services.openai.key' => 'test-not-a-secret']);
+        $bad = [...$this->generatedDessert('Poulet', 'Poulet et riz pour le menu'), 'course_type' => 'main', 'vegetarian' => false, 'protein_source' => 'poultry', 'dessert_profile' => null, 'food_groups' => ['starch', 'protein'], 'ingredients' => [['name' => 'Poulet', 'quantity' => 300, 'unit' => 'g'], ['name' => 'Riz', 'quantity' => 200, 'unit' => 'g']]];
+        $good = [...$bad, 'title' => 'Poulet au brocoli et riz', 'food_groups' => ['vegetables', 'starch', 'protein'], 'ingredients' => [...$bad['ingredients'], ['name' => 'Brocoli', 'quantity' => 300, 'unit' => 'g']]];
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($this->apiResponse($bad))->push($this->apiResponse($good))]);
+        $plan = $this->plan();
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($good['title'], $plan->meals->first()->snapshot['main']['title']);
+        $this->assertFalse(Recipe::where('title', $bad['title'])->exists());
+        Http::assertSentCount(2);
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+
+            return $input['required_food_groups'] === ['vegetables', 'starch', 'protein']
+                && isset($input['validation_feedback'])
+                && in_array('meal_balance', $input['validation_feedback']['rejections'][0]['reason_codes'], true);
+        });
+    }
+
+    public function test_every_nonempty_course_combination_uses_only_the_selected_recipes(): void
+    {
+        foreach (['starter', 'main', 'dessert'] as $course) {
+            $this->recipe($course);
+        }
+        foreach ([['starter'], ['main'], ['dessert'], ['starter', 'main'], ['main', 'dessert'], ['starter', 'dessert'], ['starter', 'main', 'dessert']] as $courses) {
+            $plan = $this->plan(['courses' => $courses]);
+            $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+            $meal = $plan->meals->first();
+            $this->assertEqualsCanonicalizing($courses, array_keys($meal->snapshot));
+            $this->assertSame(8 * count($courses), $meal->total_minutes);
+            foreach (array_keys(MenuOptions::COURSES) as $course) {
+                $this->assertSame(in_array($course, $courses, true), $meal->{$course.'_recipe_id'} !== null);
+            }
+        }
+        Http::assertNothingSent();
+    }
+
+    public function test_a_main_without_a_starter_is_complete_even_in_flexible_mode(): void
+    {
+        $this->recipe('main', ['title' => 'Riz aux lentilles incomplet', 'food_groups' => ['starch', 'protein'], 'total_minutes' => 1], ['Riz', 'Lentilles']);
+        $complete = $this->recipe('main');
+        $plan = $this->plan(['courses' => ['main'], 'variety' => 'flexible']);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($complete->id, $plan->meals->first()->main_recipe_id);
+    }
+
+    public function test_course_and_occasion_inputs_are_validated_and_saved_with_optional_child_age(): void
+    {
+        $this->withoutMiddleware(ThrottleRequests::class);
+        Queue::fake();
+        $this->actingAs(User::factory()->create());
+        $data = ['start_date' => '2026-10-19', 'days' => 1, 'people' => 6, 'meals' => ['lunch'], 'difficulty' => 1, 'quick_minutes' => 30, 'normal_minutes' => 90, 'quick_slots' => [], 'vegetarian' => false, 'excluded' => []];
+        $this->post(route('menus.store'), [...$data, 'courses' => []])->assertSessionHasErrors('courses');
+        $this->post(route('menus.store'), [...$data, 'courses' => ['snack'], 'occasion' => 'unknown'])->assertSessionHasErrors(['courses.0', 'occasion']);
+        $this->post(route('menus.store'), [...$data, 'occasion' => 'child_birthday', 'child_age' => 18])->assertSessionHasErrors('child_age');
+        $this->assertSame(0, MealPlan::count());
+        $this->post(route('menus.store'), [...$data, 'courses' => ['dessert', 'main'], 'occasion' => 'child_birthday', 'child_age' => 8])->assertSessionHasNoErrors()->assertRedirect();
+        $plan = MealPlan::firstOrFail();
+        $this->assertSame(['main', 'dessert'], $plan->criteria['courses']);
+        $this->assertSame('child_birthday', $plan->criteria['occasion']);
+        $this->assertSame(8, $plan->criteria['child_age']);
+        $this->assertStringContainsString('8 ans', $plan->title);
+        $this->post(route('menus.store'), [...$data, 'occasion' => 'family', 'child_age' => 8])->assertSessionHasNoErrors();
+        $this->assertArrayNotHasKey('child_age', MealPlan::latest('id')->firstOrFail()->criteria);
+        $this->post(route('menus.store'), [...$data, 'occasion' => 'child_birthday', 'child_age' => null])->assertSessionHasNoErrors();
+    }
+
+    public function test_child_birthday_generates_only_the_selected_dessert_with_age_and_no_alcohol(): void
+    {
+        // Unrequested catalogue courses must not trigger classification or enrichment.
+        $this->recipe('starter');
+        $this->recipe('main');
+        config(['services.openai.key' => 'test-not-a-secret']);
+        $bad = $this->generatedDessert('Rhum', 'Dessert avec alcool à refuser');
+        $good = [...$this->generatedDessert('Poire', 'Gâteau ludique aux poires'), 'dessert_profile' => 'treat'];
+        $classified = ['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipe_ids' => [0]])]]]]];
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($this->apiResponse($bad))->push($this->apiResponse($good))->push($classified)]);
+        $plan = $this->plan(['courses' => ['dessert'], 'occasion' => 'child_birthday', 'child_age' => 8]);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame(['dessert'], array_keys($plan->meals->first()->snapshot));
+        $this->assertSame($good['title'], $plan->meals->first()->snapshot['dessert']['title']);
+        $this->assertFalse(Recipe::where('title', $bad['title'])->exists());
+        Http::assertSentCount(3);
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+
+            return ($input['missing_courses'] ?? []) === ['dessert']
+                && $input['courses'] === ['dessert'] && $input['occasion'] === 'child_birthday'
+                && $input['child_age'] === 8 && in_array('no_alcohol', $input['diets'], true)
+                && $input['required_food_groups'] === [] && $input['weekly_protein_needs'] === []
+                && str_contains($input['occasion_guidance'], '8 ans');
+        });
+    }
+
+    public function test_occasion_is_used_to_select_catalogue_recipes(): void
+    {
+        $this->recipe('main', ['title' => 'Plat du quotidien']);
+        $christmas = $this->recipe('main', ['title' => 'Plat de Noël']);
+        config(['services.openai.key' => 'test-not-a-secret']);
+        Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipe_ids' => [1]])]]]]])]);
+        $plan = $this->plan(['courses' => ['main'], 'occasion' => 'christmas']);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($christmas->id, $plan->meals->first()->main_recipe_id);
+        Http::assertSentCount(1);
+        Http::assertSent(fn ($request) => str_contains(json_decode($request['input'], true)['preferences'], 'Noël'));
+    }
+
+    public function test_partial_menu_views_exports_and_actions_do_not_expose_unselected_courses(): void
+    {
+        $this->recipe('main');
+        $plan = $this->plan(['courses' => ['main']]);
+        $meal = $plan->meals->first();
+        $this->actingAs(User::findOrFail($plan->user_id))->get(route('menus.show', $plan))->assertInertia(fn (Assert $page) => $page->where('plan.meals.0.snapshot.main.title', $meal->snapshot['main']['title'])->missing('plan.meals.0.snapshot.starter')->missing('plan.meals.0.recipe_links.dessert'));
+        $this->get(route('menus.recipe', ['mealPlan' => $plan, 'meal' => $meal, 'course' => 'starter']))->assertNotFound();
+        $this->post(route('menus.replace', ['mealPlan' => $plan, 'meal' => $meal]), ['course' => 'dessert'])->assertNotFound();
+        $html = app(MenuPdfExporter::class)->printable($plan, 'menus');
+        $this->assertStringContainsString($meal->snapshot['main']['title'], $html);
+        $this->assertStringNotContainsString('<span>Entrée</span>', $html);
+        $this->assertStringNotContainsString('<span>Dessert</span>', $html);
+        $this->get(route('menus.pdf', $plan))->assertOk()->assertHeader('Content-Type', 'application/pdf');
+    }
+
+    public function test_replacing_a_course_in_a_partial_menu_keeps_the_other_selected_course(): void
+    {
+        $this->recipe('main');
+        $alternative = $this->recipe('main', ['title' => 'Poulet au brocoli et riz', 'protein_source' => 'poultry', 'main_ingredient' => 'Poulet', 'vegetarian' => false], ['Poulet', 'Brocoli', 'Riz']);
+        $this->recipe('dessert');
+        $plan = $this->plan(['courses' => ['main', 'dessert']]);
+        $dessert = $plan->meals->first()->snapshot['dessert'];
+        $plan->update(['status' => 'queued']);
+        (new GenerateMealPlan($plan->id, $plan->meals->first()->id, 'main'))->handle(app(HybridMenuPlanner::class));
+        $this->assertSame('ready', $plan->fresh()->status, $plan->fresh()->error_message ?? '');
+        $meal = $plan->fresh()->meals->first();
+        $this->assertSame($alternative->id, $meal->main_recipe_id);
+        $this->assertSame($dessert, $meal->snapshot['dessert']);
+        $this->assertNull($meal->starter_recipe_id);
+        $this->assertArrayNotHasKey('starter', $meal->snapshot);
+        Http::assertNothingSent();
     }
 }

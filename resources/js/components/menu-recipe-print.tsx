@@ -25,6 +25,7 @@ export default function MenuRecipePrint({
     for (const meal of plan.meals) {
         for (const course of ['starter', 'main', 'dessert'] as Course[]) {
             const recipe = meal.snapshot[course];
+            if (!recipe) continue;
             const identity = JSON.stringify(recipe);
             if (!unique.has(identity))
                 unique.set(identity, {

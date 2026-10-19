@@ -84,45 +84,73 @@ class DietaryRules
     /** @param array<string,mixed> $criteria */
     public function eligible(Recipe $recipe, array $criteria): bool
     {
+        return $this->violations($recipe, $criteria) === [];
+    }
+
+    /**
+     * Keep declared ingredients intact. Only remove explicit absence claims from
+     * descriptive text, so "sans porc" is not mistaken for an ingredient.
+     */
+    public function declaredText(Recipe $recipe): string
+    {
+        $descriptions = [$recipe->title, $recipe->description, $recipe->accompaniment ?? '', ...($recipe->steps ?? [])];
+        $claim = '(?:porc|alcool|viandes?|boeuf|veau|poissons?|gluten|lactose|lait|oeufs?|produits? animaux)';
+        $descriptions = array_map(function (string $text) use ($claim) {
+            $text = Str::lower(Str::ascii($text));
+
+            return preg_replace('/\bsans\s+(?:de\s+)?'.$claim.'(?:\s*(?:,|ni|et)\s*(?:sans\s+)?(?:de\s+)?'.$claim.')*\b/u', ' ', $text) ?? $text;
+        }, $descriptions);
+
+        return implode(' ', $descriptions).' '.$recipe->ingredients->pluck('name')->implode(' ');
+    }
+
+    /** @param array<string,mixed> $criteria
+     * @return list<string> Fixed reason codes, never recipe text or private preferences.
+     */
+    public function violations(Recipe $recipe, array $criteria): array
+    {
+        $reasons = [];
         $diets = $criteria['diets'] ?? [];
         $excluded = $criteria['allergens'] ?? [];
         if (in_array('gluten_free', $diets, true)) {
             $excluded[] = 'gluten';
         }
-        // Lactose tolerance cannot be inferred from a milk allergy declaration.
-        // Conservatively exclude dairy ingredients, including lactose-free dairy.
+        // A lactose-free dairy product still contains milk allergens.
         if (in_array('lactose_free', $diets, true)) {
             $excluded[] = 'milk';
         }
-        if ($excluded && ($recipe->allergens === null || array_intersect($excluded, $this->detectedAllergens($recipe)))) {
-            return false;
+        if ($excluded && $recipe->allergens === null) {
+            $reasons[] = 'allergens_unknown';
         }
-        $text = $recipe->title.' '.$recipe->description.' '.$recipe->accompaniment.' '.$recipe->ingredients->pluck('name')->implode(' ');
+        $detected = $this->detectedAllergens($recipe);
+        if (array_intersect($excluded, $detected)) {
+            $reasons[] = 'allergen_conflict';
+        }
+        $text = $this->declaredText($recipe);
         $noMeat = ($criteria['vegetarian'] ?? false) || in_array('vegan', $diets, true) || in_array('pescetarian', $diets, true);
         if ((in_array('no_pork', $diets, true) || $noMeat) && $this->matches($text, self::PORK)) {
-            return false;
+            $reasons[] = 'diet_pork';
         }
         if ($noMeat && ($this->matches($text, self::MEAT) || in_array($recipe->protein_source, ['poultry', 'red_meat'], true))) {
-            return false;
+            $reasons[] = 'diet_meat';
         }
         if (in_array('no_alcohol', $diets, true) && $this->matches($text, self::ALCOHOL)) {
-            return false;
+            $reasons[] = 'diet_alcohol';
         }
         if (in_array('no_beef', $diets, true) && $this->matches($text, ['boeuf', 'veau', 'fond de veau', 'graisse bovine'])) {
-            return false;
+            $reasons[] = 'diet_beef';
         }
-        if (($criteria['vegetarian'] ?? false) && array_intersect(['fish', 'crustaceans', 'molluscs'], $this->detectedAllergens($recipe))) {
-            return false;
+        if (($criteria['vegetarian'] ?? false) && array_intersect(['fish', 'crustaceans', 'molluscs'], $detected)) {
+            $reasons[] = 'vegetarian_incompatible';
         }
-        if (in_array('vegan', $diets, true)) {
-            if ($recipe->vegetarian !== true || array_intersect(['milk', 'eggs', 'fish', 'crustaceans', 'molluscs'], $this->detectedAllergens($recipe))
-                || $this->matches($text, ['miel', 'gelatine', 'graisse animale'])
-                || in_array($recipe->protein_source, ['fish', 'poultry', 'eggs', 'red_meat', 'dairy'], true)) {
-                return false;
-            }
+        if (in_array('vegan', $diets, true) && ($recipe->vegetarian !== true
+            || array_intersect(['milk', 'eggs', 'fish', 'crustaceans', 'molluscs'], $detected)
+            || $this->matches($text, ['miel', 'gelatine', 'graisse animale'])
+            || in_array($recipe->protein_source, ['fish', 'poultry', 'eggs', 'red_meat', 'dairy'], true))) {
+            $reasons[] = 'vegan_incompatible';
         }
 
-        return true;
+        return $reasons;
     }
 
     /** @param array<string,mixed> $criteria

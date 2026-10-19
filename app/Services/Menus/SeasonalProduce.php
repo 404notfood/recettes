@@ -35,9 +35,43 @@ class SeasonalProduce
         'orange' => [1, 2, 3, 4, 12], 'chataigne' => [9, 10, 11],
     ];
 
+    // Keep obvious fresh summer-fruit mismatches out of seasonal menus.
+    // Other produce may extend one month beyond its calendar, allowing some flexibility.
+    private const SUMMER_FRUITS = ['abricot', 'cerise', 'fraise', 'framboise', 'melon', 'pasteque', 'peche', 'nectarine', 'brugnon'];
+
     public function eligible(Recipe $recipe, string $date): bool
     {
+        return $this->outOfSeason($recipe, $date) === [];
+    }
+
+    public function menuEligible(Recipe $recipe, string $date): bool
+    {
+        return ! array_intersect($this->outOfSeason($recipe, $date), $this->excludedFreshProduce($date));
+    }
+
+    /** @return list<string> */
+    public function excludedFreshProduce(string $date): array
+    {
         $month = CarbonImmutable::parse($date)->month;
+
+        return array_keys(array_filter(self::MONTHS, function ($months, $produce) use ($month) {
+            $tolerance = in_array($produce, self::SUMMER_FRUITS, true) ? 0 : 1;
+            foreach ($months as $seasonMonth) {
+                $distance = abs($month - $seasonMonth);
+                if (min($distance, 12 - $distance) <= $tolerance) {
+                    return false;
+                }
+            }
+
+            return true;
+        }, ARRAY_FILTER_USE_BOTH));
+    }
+
+    /** @return list<string> */
+    private function outOfSeason(Recipe $recipe, string $date): array
+    {
+        $month = CarbonImmutable::parse($date)->month;
+        $outside = [];
         foreach ($recipe->ingredients as $ingredient) {
             $name = Str::lower(Str::ascii(str_replace('-', ' ', $ingredient->name)));
             if (preg_match('/conserve|surgele|congele|seche|sec\b|compote|confiture|coulis|concentre|farine|huile|jus|vinaigre/', $name)) {
@@ -57,12 +91,12 @@ class SeasonalProduce
                 $pattern = implode(' ', array_map(fn ($word) => preg_quote($word, '/').'s?', explode(' ', $produce)));
                 if (preg_match('/(?<![a-z])'.$pattern.'(?![a-z])/', $name)
                     && ! in_array($month, $months, true)) {
-                    return false;
+                    $outside[] = $produce;
                 }
             }
         }
 
-        return true;
+        return array_values(array_unique($outside));
     }
 
     /** @return list<string> */

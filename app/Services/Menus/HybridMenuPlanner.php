@@ -20,11 +20,16 @@ class HybridMenuPlanner
     public function generate(MealPlan $plan, ?int $replaceMealId = null, ?string $replaceCourse = null): void
     {
         $criteria = ['start_date' => $plan->start_date->format('Y-m-d'), ...$plan->criteria];
+        $courses = MenuOptions::courses($criteria);
+        if (($criteria['occasion'] ?? '') === 'child_birthday') {
+            $criteria['diets'] = array_values(array_unique([...($criteria['diets'] ?? []), 'no_alcohol']));
+        }
         $catalogue = StoredRecipe::with('category')->where(function ($query) use ($plan) {
             $query->where('status', 'published')->orWhere(function ($query) use ($plan) {
                 $query->where('user_id', $plan->user_id)->where('status', 'pending');
             });
         })->orderBy('id')->get()->map(fn ($recipe) => Recipe::fromRecord($recipe));
+        $catalogue = $catalogue->filter(fn ($recipe) => ! $recipe->course_type || in_array($recipe->course_type, $courses, true));
         $matching = $this->matchingPreferences($catalogue, $criteria);
         $enriched = $this->enrichCatalogue($matching, $criteria);
         $eligible = $matching->filter(fn ($recipe) => $this->rules->eligible($recipe, [...$criteria, 'seasonal' => false]));
@@ -84,7 +89,7 @@ class HybridMenuPlanner
                     }
                 }
                 $selected = $this->select($eligible, $criteria, $limit, $usage, $previous, $fixed, $banned, $counts, $weekMeals, $recent, $date);
-                $missing = array_values(array_diff(self::COURSES, array_keys($selected)));
+                $missing = array_values(array_diff($courses, array_keys($selected)));
                 if ($missing) {
                     $remaining = $limit - array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $selected));
                     $avoidIngredients = array_map(fn ($profiles) => array_values(array_unique(array_merge(...array_column($profiles, 'ingredients')))), $recent);
@@ -94,9 +99,13 @@ class HybridMenuPlanner
                         'people' => $plan->people, 'difficulty' => $criteria['difficulty'],
                         'vegetarian' => $criteria['vegetarian'], 'excluded' => $criteria['excluded'],
                         'preferences' => $criteria['preferences'], 'date' => $date, 'meal' => $type,
+                        'courses' => $courses, 'occasion' => $criteria['occasion'] ?? 'everyday',
+                        'occasion_guidance' => MenuOptions::guidance($criteria),
+                        'child_age' => $criteria['child_age'] ?? null,
                         'diets' => $criteria['diets'] ?? [], 'excluded_allergens' => $criteria['allergens'] ?? [],
                         'seasonal' => $criteria['seasonal'] ?? false,
                         'seasonal_produce' => ($criteria['seasonal'] ?? false) ? app(SeasonalProduce::class)->suggestions($date) : [],
+                        'excluded_fresh_produce' => ($criteria['seasonal'] ?? false) ? app(SeasonalProduce::class)->excludedFreshProduce($date) : [],
                         'variety' => $criteria['variety'] ?? 'flexible',
                         'weekly_protein_needs' => $this->rules->weeklyNeeds($counts, $weekMeals, $criteria),
                         'recent_meal' => $previous,
@@ -111,33 +120,61 @@ class HybridMenuPlanner
                         'existing_courses' => array_map(fn ($recipe) => ['title' => $recipe->title, 'main_ingredient' => $recipe->main_ingredient], $selected),
                         'avoid_titles' => array_values(array_unique([...array_keys($usage), ...$banned])),
                     ];
-                    // Retry a conflicting proposal before giving up; rejected recipes
-                    // never enter the catalogue or the transaction.
+                    if (in_array('main', $missing, true) && (($criteria['variety'] ?? 'flexible') === 'varied' || ! in_array('starter', $courses, true))) {
+                        $context['required_food_groups'] = ['vegetables', 'starch', 'protein'];
+                    }
+                    if (! in_array('main', $courses, true)) {
+                        $context['required_food_groups'] = in_array('starter', $missing, true) ? ['vegetables'] : [];
+                        $context['allowed_protein_sources'] = [];
+                        $context['weekly_protein_needs'] = [];
+                    }
+
+                    // One shared budget for correction and diversity: at most three
+                    // proposals per meal. Invalid recipes never enter the catalogue.
                     for ($attempt = 0; $attempt < 3; $attempt++) {
                         $proposed = $selected;
                         $newRecipes = [];
-                        $conflict = false;
+                        $rejections = [];
+                        $eligibilityFailure = false;
                         foreach ($this->ai->generate($context) as $data) {
                             $ingredients = $data['ingredients'];
                             if (! is_array($ingredients)) {
-                                throw new PlanningException('Les ingrédients proposés sont incomplets.');
+                                throw new PlanningException('Les ingrédients proposés sont incomplets.', ['operation' => 'select_generated_recipes', 'stage' => 'ingredients']);
                             }
                             unset($data['ingredients']);
                             $recipe = new Recipe([...$data, 'user_id' => $plan->user_id, 'is_ai_generated' => true, 'planning_estimated' => true]);
                             $recipe->setRelation('ingredients', collect($ingredients)->map(fn ($ingredient) => new Ingredient($ingredient)));
                             $fingerprint = $this->rules->fingerprint($recipe);
-                            if (! $this->rules->eligible($recipe, $criteria, $date)) {
-                                throw new PlanningException('Une recette créée ne respecte pas les critères. Ajustez les critères et réessayez.');
+                            $reasons = $this->rules->violations($recipe, $criteria, $date);
+                            $eligibilityFailure = $eligibilityFailure || $reasons !== [];
+                            if (! $this->rules->allowedByWeek($recipe, $counts, $weekMeals, $criteria)) {
+                                $reasons[] = 'weekly_rotation';
                             }
-                            $conflict = $conflict || ! $this->rules->allowedByWeek($recipe, $counts, $weekMeals, $criteria)
-                                || ! $this->diversity->allowed($recipe->course_type, $this->diversity->profile($recipe), $recent)
-                                || ($recipe->course_type === 'main' && ! $this->diversity->allowedByWeek($this->diversity->profile($recipe), $counts, $weekMeals))
-                                || in_array($fingerprint, $banned, true)
-                                || $catalogue->contains(fn ($item) => $this->rules->fingerprint($item) === $fingerprint);
+                            if (! $this->diversity->allowed($recipe->course_type, $this->diversity->profile($recipe), $recent)) {
+                                $reasons[] = 'recent_repetition';
+                            }
+                            if ($recipe->course_type === 'main' && ! $this->diversity->allowedByWeek($this->diversity->profile($recipe), $counts, $weekMeals)) {
+                                $reasons[] = 'weekly_ingredients';
+                            }
+                            if (in_array($fingerprint, $banned, true) || $catalogue->contains(fn ($item) => $this->rules->fingerprint($item) === $fingerprint)) {
+                                $reasons[] = 'duplicate_title';
+                            }
+                            if ($reasons) {
+                                $rejections[] = ['course' => $recipe->course_type, 'reason_codes' => $reasons];
+                            }
                             $newRecipes[] = $recipe;
                             $proposed[$recipe->course_type] = $recipe;
                         }
-                        if (! $conflict && (isset($fixed['starter'], $fixed['main']) || $this->diversity->compatible($proposed))) {
+                        if (count($proposed) !== count($courses) || ! $this->rules->balanced($proposed, $criteria)) {
+                            $rejections[] = ['course' => 'meal', 'reason_codes' => ['meal_balance']];
+                        }
+                        if (! isset($fixed['starter'], $fixed['main']) && ! $this->diversity->compatible($proposed)) {
+                            $rejections[] = ['course' => 'meal', 'reason_codes' => ['same_meal_vegetables']];
+                        }
+                        if (array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $proposed)) > $limit) {
+                            $rejections[] = ['course' => 'meal', 'reason_codes' => ['meal_time']];
+                        }
+                        if (! $rejections) {
                             foreach ($newRecipes as $recipe) {
                                 $drafts[] = $recipe;
                                 $catalogue->push($recipe);
@@ -146,17 +183,30 @@ class HybridMenuPlanner
                             $selected = $proposed;
                             break;
                         }
-                        $context['avoid_titles'] = array_values(array_unique([...$context['avoid_titles'], ...array_map(fn ($recipe) => $recipe->title, $newRecipes)]));
-                        $context['diversity_retry'] = 'La proposition précédente répétait un plat ou un ingrédient dominant. Change réellement de plat et de légumes, en respectant les deux jours voisins et les autres rôles du repas.';
                         if ($attempt === 2) {
-                            throw new PlanningException('Les propositions restent trop répétitives. Réessayez avec davantage de temps ou des envies moins restrictives.');
+                            $reasons = array_values(array_unique(array_merge(...array_column($rejections, 'reason_codes'))));
+                            throw new PlanningException($this->rules->rejectionMessage($reasons), [
+                                'operation' => 'select_generated_recipes',
+                                'stage' => $eligibilityFailure ? 'eligibility' : 'composition_or_diversity',
+                                'attempts' => $attempt + 1, 'day_offset' => $offset, 'meal_type' => $type,
+                                'rejections' => $rejections,
+                            ]);
                         }
+                        $context['avoid_titles'] = array_values(array_unique([...$context['avoid_titles'], ...array_map(fn ($recipe) => $recipe->title, $newRecipes)]));
+                        $context['diversity_retry'] = 'Corrige les motifs de refus de validation_feedback. Change réellement de recette si nécessaire ; conserve toutes les contraintes alimentaires, de saison, de temps et de diversité.';
+                        $context['validation_feedback'] = ['rejections' => $rejections, 'reason_labels' => RecipeCriteria::REJECTION_LABELS];
+                        // Only returned to the generation service; never stored in diagnostics or logs.
+                        $context['rejected_proposals'] = array_map(fn ($recipe) => [
+                            'course_type' => $recipe->course_type, 'title' => $recipe->title,
+                            'description' => $recipe->description, 'steps' => $recipe->steps,
+                            'ingredients' => $recipe->ingredients->pluck('name')->all(),
+                        ], $newRecipes);
                     }
                 }
-                if (count($selected) !== 3 || ! $this->rules->balanced($selected, $criteria)
+                if (count($selected) !== count($courses) || ! $this->rules->balanced($selected, $criteria)
                     || (! isset($fixed['starter'], $fixed['main']) && ! $this->diversity->compatible($selected))
                     || array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $selected)) > $limit) {
-                    throw new PlanningException('Impossible de composer un repas complet avec légumes, féculents et protéines dans le temps demandé.');
+                    throw new PlanningException('Impossible de composer un repas complet avec légumes, féculents et protéines dans le temps demandé.', ['operation' => 'validate_meal', 'stage' => 'composition', 'day_offset' => $offset, 'meal_type' => $type]);
                 }
                 $this->trackWeek(array_map(fn ($recipe) => $this->snapshot($recipe), $selected), $weekly[$week]);
                 foreach ($selected as $recipe) {
@@ -190,8 +240,8 @@ class HybridMenuPlanner
                 $selected = $item['selected'];
                 $plan->meals()->updateOrCreate(['date' => $item['date'], 'meal_type' => $item['type']], [
                     'quick' => $item['quick'], 'total_minutes' => array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $selected)),
-                    'starter_recipe_id' => $selected['starter']->id, 'main_recipe_id' => $selected['main']->id,
-                    'dessert_recipe_id' => $selected['dessert']->id,
+                    'starter_recipe_id' => $selected['starter']->id ?? null, 'main_recipe_id' => $selected['main']->id ?? null,
+                    'dessert_recipe_id' => $selected['dessert']->id ?? null,
                     'snapshot' => array_map(fn ($recipe) => $this->snapshot($recipe), $selected),
                 ]);
             }
@@ -206,7 +256,7 @@ class HybridMenuPlanner
      */
     private function matchingPreferences(Collection $catalogue, array $criteria): Collection
     {
-        $preferences = trim($criteria['preferences'] ?? '');
+        $preferences = MenuOptions::preferences($criteria);
         if ($preferences === '' || $catalogue->isEmpty()) {
             return $catalogue;
         }
@@ -239,7 +289,7 @@ class HybridMenuPlanner
         }
         $complete = $catalogue->filter(fn ($recipe) => $this->rules->eligible($recipe, $criteria));
         $minimum = 0;
-        foreach (self::COURSES as $course) {
+        foreach (MenuOptions::courses($criteria) as $course) {
             $duration = $complete->where('course_type', $course)->min('total_minutes');
             if ($duration === null) {
                 $minimum = PHP_INT_MAX;
@@ -250,7 +300,7 @@ class HybridMenuPlanner
         $limit = $criteria['quick_slots'] ? $criteria['quick_minutes'] : $criteria['normal_minutes'];
         if ($minimum <= $limit) {
             $candidate = $this->select($complete, $criteria, $limit, [], [], [], [], [], min(7, $criteria['days']) * count($criteria['meals']));
-            if (count($candidate) === 3) {
+            if (count($candidate) === count(MenuOptions::courses($criteria))) {
                 return [];
             }
         }
@@ -262,7 +312,7 @@ class HybridMenuPlanner
                 || ($recipe->allergens === null && (! empty($criteria['allergens']) || array_intersect($criteria['diets'] ?? [], ['gluten_free', 'lactose_free'])))));
         // Bound enrichment per generation; prioritize each course rather than one category.
         $candidates = collect();
-        foreach ([...self::COURSES, null] as $course) {
+        foreach ([...MenuOptions::courses($criteria), null] as $course) {
             $candidates = $candidates->concat($incomplete->where('course_type', $course)->take(6));
         }
         foreach ($candidates->unique('id')->chunk(6) as $batch) {
@@ -299,8 +349,15 @@ class HybridMenuPlanner
      */
     private function select(Collection $catalogue, array $criteria, int $limit, array $usage, array $previous, array $fixed, array $banned, array $counts, int $weekMeals, array $recent = [], ?string $date = null): array
     {
+        $courses = MenuOptions::courses($criteria);
+        $seasonalPenalties = $catalogue->mapWithKeys(fn ($recipe) => [spl_object_id($recipe) => $this->rules->seasonalPenalty($recipe, $criteria, $date)])->all();
         $pools = [];
         foreach (self::COURSES as $course) {
+            if (! in_array($course, $courses, true)) {
+                $pools[$course] = [null];
+
+                continue;
+            }
             $maxUses = ($course === 'main' || ($criteria['variety'] ?? 'flexible') === 'varied' ? 1 : 2) * (int) ceil($criteria['days'] / 7);
             if (isset($fixed[$course])) {
                 $pools[$course] = [$fixed[$course]];
@@ -315,7 +372,7 @@ class HybridMenuPlanner
                 && ($course !== 'main' || $this->diversity->allowedByWeek($this->diversity->profile($recipe), $counts, $weekMeals))
                 && $this->diversity->allowed($course, $this->diversity->profile($recipe), $recent)
                 && ! in_array($this->rules->fingerprint($recipe), $banned, true))
-                ->sortBy(fn ($recipe) => ($usage[$this->rules->fingerprint($recipe)] ?? 0) * 10000 + ($counts['family:'.$this->rules->family($recipe)] ?? 0) * 1000 + $recipe->total_minutes)
+                ->sortBy(fn ($recipe) => ($seasonalPenalties[spl_object_id($recipe)] ?? 0) + ($usage[$this->rules->fingerprint($recipe)] ?? 0) * 10000 + ($counts['family:'.$this->rules->family($recipe)] ?? 0) * 1000 + $recipe->total_minutes)
                 ->take(20)->values()->all();
             $pools[$course][] = null;
         }
@@ -326,7 +383,7 @@ class HybridMenuPlanner
                 foreach ($pools['dessert'] as $dessert) {
                     $recipes = array_filter(compact('starter', 'main', 'dessert'));
                     $minutes = array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $recipes));
-                    if ($minutes + (3 - count($recipes)) > $limit || ! $this->rules->balanced($recipes, $criteria)
+                    if ($minutes + (count($courses) - count($recipes)) > $limit || ! $this->rules->balanced($recipes, $criteria)
                         || (! isset($fixed['starter'], $fixed['main']) && ! $this->diversity->compatible($recipes))) {
                         continue;
                     }
@@ -345,6 +402,7 @@ class HybridMenuPlanner
                     $dominants = [];
                     foreach ($recipes as $course => $recipe) {
                         $key = $this->rules->fingerprint($recipe);
+                        $score -= $seasonalPenalties[spl_object_id($recipe)] ?? 0;
                         $score -= ($usage[$key] ?? 0) * 1000;
                         if (($previous[$course]['title'] ?? null) === $recipe->title) {
                             $score -= 3000;

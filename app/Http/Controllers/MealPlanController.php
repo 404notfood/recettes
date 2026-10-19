@@ -7,6 +7,7 @@ use App\Models\MealPlan;
 use App\Models\PlannedMeal;
 use App\Models\Recipe;
 use App\Services\Menus\DietaryRules;
+use App\Services\Menus\MenuOptions;
 use App\Services\Menus\MenuPdfExporter;
 use App\Services\Menus\OpenAiRecipeService;
 use App\Services\Menus\ShoppingList;
@@ -30,6 +31,7 @@ class MealPlanController extends Controller
             'aiConfigured' => $ai->configured(),
             'catalogueCount' => Recipe::where('status', 'published')->count(),
             'today' => now('Europe/Paris')->format('Y-m-d'),
+            'occasions' => MenuOptions::OCCASIONS,
         ]);
     }
 
@@ -39,6 +41,10 @@ class MealPlanController extends Controller
             'start_date' => 'required|date_format:Y-m-d',
             'days' => 'required|integer|in:1,7,14', 'people' => 'required|integer|between:1,20',
             'meals' => 'required|array|min:1|max:2', 'meals.*' => 'required|in:lunch,dinner|distinct',
+            'courses' => 'sometimes|required|array|min:1|max:3',
+            'courses.*' => ['required', 'distinct', Rule::in(array_keys(MenuOptions::COURSES))],
+            'occasion' => ['sometimes', 'required', Rule::in(array_keys(MenuOptions::OCCASIONS))],
+            'child_age' => 'exclude_unless:occasion,child_birthday|nullable|integer|between:3,17',
             'difficulty' => 'required|integer|between:1,3',
             'quick_minutes' => 'required|integer|in:15,30,45',
             'normal_minutes' => 'required|integer|between:15,240|gte:quick_minutes',
@@ -51,6 +57,8 @@ class MealPlanController extends Controller
             'diets' => 'sometimes|array|max:7', 'diets.*' => ['required', 'distinct', Rule::in(array_keys(DietaryRules::DIETS))],
             'allergens' => 'sometimes|array|max:14', 'allergens.*' => ['required', 'distinct', Rule::in(array_keys(DietaryRules::ALLERGENS))],
         ]);
+        $data['courses'] = MenuOptions::courses($data);
+        $data['occasion'] ??= 'everyday';
         foreach ($data['quick_slots'] as $slot) {
             [$day, $meal] = explode(':', $slot);
             if ((int) $day >= $data['days'] || ! in_array($meal, $data['meals'], true)) {
@@ -59,7 +67,7 @@ class MealPlanController extends Controller
         }
         $plan = MealPlan::create([
             'user_id' => $request->user()->id,
-            'title' => 'Menus du '.Carbon::parse($data['start_date'])->format('d/m/Y'),
+            'title' => ($data['occasion'] === 'everyday' ? 'Menus' : MenuOptions::occasionLabel($data)).' du '.Carbon::parse($data['start_date'])->format('d/m/Y'),
             'start_date' => $data['start_date'], 'days' => $data['days'], 'people' => $data['people'],
             'criteria' => [...$data, 'preferences' => $data['preferences'] ?? ''], 'status' => 'queued',
         ]);
@@ -78,7 +86,7 @@ class MealPlanController extends Controller
         $available = Recipe::whereIn('id', $ids)->where(fn ($query) => $query->where('status', 'published')->orWhere(fn ($query) => $query->where('user_id', $request->user()->id)->where('is_ai_generated', true)))->get()->keyBy('id');
         foreach ($mealPlan->meals as $meal) {
             $links = [];
-            foreach (['starter', 'main', 'dessert'] as $course) {
+            foreach (array_keys($meal->snapshot) as $course) {
                 $record = $available->get($meal->{$course.'_recipe_id'});
                 $links[$course] = $record ? route('recipes.show', ['recipe' => $record->slug]) : route('menus.recipe', ['mealPlan' => $mealPlan->id, 'meal' => $meal->id, 'course' => $course]);
             }
@@ -87,13 +95,14 @@ class MealPlanController extends Controller
 
         return Inertia::render('menus/show', [
             'plan' => $mealPlan, 'shoppingList' => $items, 'shoppingCategories' => $shopping->grouped($items),
+            'occasionLabel' => MenuOptions::occasionLabel($mealPlan->criteria),
         ]);
     }
 
     public function recipe(Request $request, MealPlan $mealPlan, PlannedMeal $meal, string $course): \Inertia\Response
     {
         $this->authorizePlan($request, $mealPlan);
-        abort_unless($meal->meal_plan_id === $mealPlan->id && in_array($course, ['starter', 'main', 'dessert'], true), 404);
+        abort_unless($meal->meal_plan_id === $mealPlan->id && in_array($course, ['starter', 'main', 'dessert'], true) && isset($meal->snapshot[$course]), 404);
 
         return Inertia::render('menus/recipe', ['plan' => $mealPlan->only(['id', 'title', 'people']), 'recipe' => $meal->snapshot[$course]]);
     }
@@ -160,6 +169,7 @@ class MealPlanController extends Controller
         $this->authorizePlan($request, $mealPlan);
         abort_unless($meal->meal_plan_id === $mealPlan->id, 404);
         $data = $request->validate(['course' => ['required', Rule::in(['starter', 'main', 'dessert'])]]);
+        abort_unless(isset($meal->snapshot[$data['course']]), 404);
         $this->enqueue($mealPlan, $meal, $data['course']);
 
         return back();

@@ -45,10 +45,12 @@ export default function MenuShow({
     plan,
     shoppingCategories,
     errors = {},
+    occasionLabel = 'Repas du quotidien',
 }: {
     plan: MealPlan;
     shoppingCategories: ShoppingCategory[];
     errors?: Record<string, string>;
+    occasionLabel?: string;
 }) {
     const busy = ['queued', 'generating'].includes(plan.status);
     const { start, stop } = usePoll(
@@ -127,7 +129,10 @@ export default function MenuShow({
                             <CalendarDays size={14} /> {plan.days} jours
                         </span>
                         <span>
-                            <Leaf size={14} /> Entrée, plat & dessert
+                            <Leaf size={14} />{' '}
+                            {(plan.criteria.courses ?? courses)
+                                .map((course) => courseLabels[course])
+                                .join(' + ')}
                         </span>
                     </div>
                 </div>
@@ -172,12 +177,18 @@ export default function MenuShow({
             <div className="mb-5 rounded-xl border p-4 text-sm">
                 <p>
                     {plan.criteria.seasonal
-                        ? 'Fruits et légumes de saison · France métropolitaine'
+                        ? 'Priorité aux produits de saison · France métropolitaine'
                         : 'Toutes saisons'}{' '}
                     ·{' '}
                     {plan.criteria.variety === 'varied'
                         ? 'Aucune recette répétée par semaine'
                         : 'Diversité souple'}
+                </p>
+                <p className="mt-2">
+                    {occasionLabel}
+                    {plan.criteria.occasion === 'child_birthday'
+                        ? ' · Sans alcool, même cuit'
+                        : ''}
                 </p>
                 {!!plan.criteria.diets?.length && (
                     <p className="mt-2">
@@ -351,82 +362,83 @@ export default function MenuShow({
                                             </div>
                                             {meal ? (
                                                 <div className="menu-courses">
-                                                    {courses.map((course) => (
-                                                        <div
-                                                            className="menu-course"
-                                                            key={course}
-                                                        >
-                                                            <div>
-                                                                <span className="menu-course-label">
-                                                                    {
-                                                                        courseLabels[
-                                                                            course
-                                                                        ]
-                                                                    }
-                                                                </span>
-                                                                <Link
-                                                                    href={
-                                                                        meal
-                                                                            .recipe_links[
-                                                                            course
-                                                                        ]
-                                                                    }
-                                                                    className="menu-recipe-link"
-                                                                >
-                                                                    {
-                                                                        meal
-                                                                            .snapshot[
-                                                                            course
-                                                                        ].title
-                                                                    }
-                                                                    <ArrowUpRight
-                                                                        size={
-                                                                            13
-                                                                        }
-                                                                    />
-                                                                </Link>
-                                                                {meal.snapshot[
-                                                                    course
-                                                                ]
-                                                                    .accompaniment && (
-                                                                    <p className="mt-1 text-xs text-muted-foreground">
-                                                                        Accompagnement
-                                                                        :{' '}
+                                                    {courses.map((course) => {
+                                                        const recipe =
+                                                            meal.snapshot[
+                                                                course
+                                                            ];
+                                                        if (!recipe)
+                                                            return null;
+                                                        return (
+                                                            <div
+                                                                className="menu-course"
+                                                                key={course}
+                                                            >
+                                                                <div>
+                                                                    <span className="menu-course-label">
                                                                         {
-                                                                            meal
-                                                                                .snapshot[
+                                                                            courseLabels[
                                                                                 course
                                                                             ]
-                                                                                .accompaniment
                                                                         }
-                                                                    </p>
-                                                                )}
-                                                            </div>
-                                                            <button
-                                                                type="button"
-                                                                className="menu-icon-button"
-                                                                title={`Changer ${meal.snapshot[course].title}`}
-                                                                aria-label={`Changer ${courseLabels[course].toLowerCase()}`}
-                                                                disabled={
-                                                                    busy ||
-                                                                    pending ||
-                                                                    meal.locked
-                                                                }
-                                                                onClick={() =>
-                                                                    action(
-                                                                        `/menus/${plan.id}/meals/${meal.id}/replace`,
+                                                                    </span>
+                                                                    <Link
+                                                                        href={
+                                                                            meal
+                                                                                .recipe_links[
+                                                                                course
+                                                                            ] ??
+                                                                            `/menus/${plan.id}/recettes/${meal.id}/${course}`
+                                                                        }
+                                                                        className="menu-recipe-link"
+                                                                    >
                                                                         {
-                                                                            course,
-                                                                        },
-                                                                    )
-                                                                }
-                                                            >
-                                                                <RefreshCw
-                                                                    size={12}
-                                                                />
-                                                            </button>
-                                                        </div>
-                                                    ))}
+                                                                            recipe.title
+                                                                        }
+                                                                        <ArrowUpRight
+                                                                            size={
+                                                                                13
+                                                                            }
+                                                                        />
+                                                                    </Link>
+                                                                    {recipe.accompaniment && (
+                                                                        <p className="mt-1 text-xs text-muted-foreground">
+                                                                            Accompagnement
+                                                                            :{' '}
+                                                                            {
+                                                                                recipe.accompaniment
+                                                                            }
+                                                                        </p>
+                                                                    )}
+                                                                </div>
+                                                                <button
+                                                                    type="button"
+                                                                    className="menu-icon-button"
+                                                                    title={`Changer ${recipe.title}`}
+                                                                    aria-label={`Changer ${courseLabels[course].toLowerCase()}`}
+                                                                    disabled={
+                                                                        busy ||
+                                                                        pending ||
+                                                                        meal.locked
+                                                                    }
+                                                                    onClick={() =>
+                                                                        action(
+                                                                            `/menus/${plan.id}/meals/${meal.id}/replace`,
+                                                                            {
+                                                                                course,
+                                                                            },
+                                                                        )
+                                                                    }
+                                                                >
+                                                                    <RefreshCw
+                                                                        size={
+                                                                            12
+                                                                        }
+                                                                    />
+                                                                </button>
+                                                            </div>
+                                                        );
+                                                    })}
                                                 </div>
                                             ) : (
                                                 <p className="menu-empty">

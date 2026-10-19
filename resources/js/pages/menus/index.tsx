@@ -1,4 +1,5 @@
 import MenuDietaryFields from '@/components/menu-dietary-fields';
+import MenuOccasionFields from '@/components/menu-occasion-fields';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -6,6 +7,8 @@ import { Label } from '@/components/ui/label';
 
 import {
     mealLabels,
+    courseLabels,
+    type Course,
     statusLabels,
     type MealPlanSummary,
     type MealType,
@@ -30,11 +33,13 @@ export default function Menus({
     aiConfigured,
     catalogueCount,
     today,
+    occasions = {},
 }: {
     plans: MealPlanSummary[];
     aiConfigured: boolean;
     catalogueCount: number;
     today: string;
+    occasions?: Record<string, string>;
 }) {
     const [excludedText, setExcludedText] = useState('');
     const form = useForm({
@@ -42,6 +47,9 @@ export default function Menus({
         days: 7,
         people: 2,
         meals: ['lunch', 'dinner'] as MealType[],
+        courses: ['starter', 'main', 'dessert'] as Course[],
+        occasion: 'everyday',
+        child_age: '',
         difficulty: 1,
         quick_minutes: 30,
         normal_minutes: 90,
@@ -87,6 +95,10 @@ export default function Menus({
         event.preventDefault();
         form.transform((data) => ({
             ...data,
+            child_age:
+                data.occasion === 'child_birthday' && data.child_age !== ''
+                    ? Number(data.child_age)
+                    : null,
             excluded: [
                 ...new Set(
                     excludedText
@@ -123,7 +135,7 @@ export default function Menus({
                             publiées
                         </span>
                         <span className="flex items-center gap-2">
-                            <Clock size={16} /> Entrée, plat et dessert
+                            <Clock size={16} /> Les recettes de votre choix
                         </span>
                     </div>
                 </div>
@@ -142,6 +154,13 @@ export default function Menus({
                                     ou laitiers.
                                 </p>
                             </div>
+                            <MenuOccasionFields
+                                data={form.data}
+                                occasions={occasions}
+                                onChange={(value) =>
+                                    form.setData({ ...form.data, ...value })
+                                }
+                            />
                             <div className="grid gap-4 sm:grid-cols-3">
                                 <div className="space-y-2">
                                     <Label htmlFor="start_date">
@@ -501,7 +520,8 @@ export default function Menus({
                                 className="w-full bg-emerald-700 hover:bg-emerald-800"
                                 disabled={
                                     form.processing ||
-                                    form.data.meals.length === 0
+                                    form.data.meals.length === 0 ||
+                                    form.data.courses.length === 0
                                 }
                             >
                                 <Sparkles className="mr-2 size-4" />
@@ -519,7 +539,20 @@ export default function Menus({
                             <p className="flex items-center gap-2 text-sm">
                                 <CalendarDays size={17} />
                                 {form.data.days * form.data.meals.length} repas
-                                complets
+                                à composer
+                            </p>
+                            <p className="text-sm">
+                                {form.data.courses
+                                    .map((course) => courseLabels[course])
+                                    .join(' + ') ||
+                                    'Choisissez les éléments du repas'}
+                            </p>
+                            <p className="text-sm">
+                                {occasions[form.data.occasion]}
+                                {form.data.occasion === 'child_birthday' &&
+                                form.data.child_age
+                                    ? ` · ${form.data.child_age} ans`
+                                    : ''}
                             </p>
                             <p className="flex items-center gap-2 text-sm">
                                 <Users size={17} />
@@ -531,8 +564,8 @@ export default function Menus({
                             </p>
                             <p className="border-t pt-3 text-xs text-muted-foreground">
                                 Les temps sont des estimations prudentes : les
-                                durées des trois recettes sont additionnées. Les
-                                quantités de la liste de courses suivent la
+                                durées des recettes choisies sont additionnées.
+                                Les quantités de la liste de courses suivent la
                                 taille du foyer.
                             </p>
                         </CardContent>

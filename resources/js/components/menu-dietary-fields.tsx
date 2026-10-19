@@ -30,12 +30,16 @@ export default function MenuDietaryFields({
                             onChange({ seasonal: event.target.checked })
                         }
                     />
-                    Fruits et légumes de saison
+                    {planning
+                        ? 'Priorité aux fruits et légumes de saison'
+                        : 'Fruits et légumes de saison'}
                 </label>
                 <p className="text-xs text-muted-foreground">
                     France métropolitaine, selon la date{' '}
                     {planning ? 'de chaque repas' : 'du jour'}. Conserves et
                     surgelés explicitement nommés autorisés.
+                    {planning &&
+                        ' Une souplesse autour des saisons pour varier les repas, en évitant les produits frais clairement hors saison : pas de fraises fraîches en octobre. Les recettes manquantes peuvent être créées automatiquement.'}
                 </p>
                 {planning && (
                     <label className="block space-y-2 text-sm">

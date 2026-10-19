@@ -52,8 +52,8 @@ export interface PlannedMeal {
     starter_recipe_id: number | null;
     main_recipe_id: number | null;
     dessert_recipe_id: number | null;
-    snapshot: Record<Course, MenuRecipe>;
-    recipe_links: Record<Course, string>;
+    snapshot: Partial<Record<Course, MenuRecipe>>;
+    recipe_links: Partial<Record<Course, string>>;
 }
 export interface MealPlanSummary {
     id: number;
@@ -74,6 +74,9 @@ export interface MealPlan extends MealPlanSummary {
         variety?: string;
         diets?: string[];
         allergens?: string[];
+        courses?: Course[];
+        occasion?: string;
+        child_age?: number | null;
     };
     meals: PlannedMeal[];
 }

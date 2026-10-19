@@ -36,8 +36,34 @@ const fixtures = {
         aiConfigured: false,
         catalogueCount: 0,
         today: '2026-10-19',
+        occasions: {
+            everyday: 'Repas du quotidien',
+            christmas: 'Noël',
+            child_birthday: 'Anniversaire enfant',
+        },
     },
-    'menus/show': { plan, shoppingCategories: [] },
+    'menus/show': {
+        plan: {
+            ...plan,
+            criteria: { ...plan.criteria, courses: ['main'] },
+            meals: [
+                {
+                    id: 1,
+                    date: '2026-10-19',
+                    meal_type: 'lunch',
+                    quick: false,
+                    locked: false,
+                    total_minutes: 20,
+                    starter_recipe_id: null,
+                    main_recipe_id: 1,
+                    dessert_recipe_id: null,
+                    snapshot: { main: recipe },
+                    recipe_links: { main: '/recettes/verification' },
+                },
+            ],
+        },
+        shoppingCategories: [],
+    },
     'menus/recipe': { plan, recipe },
     'menus/drives': {
         plan,

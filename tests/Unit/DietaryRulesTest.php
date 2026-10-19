@@ -88,4 +88,39 @@ class DietaryRulesTest extends TestCase
         $this->assertFalse($rules->eligible($this->recipe(['Tomate fraîche']), '2026-12-01'));
         $this->assertFalse($rules->eligible($this->recipe(['Haricots verts frais']), '2026-12-01'));
     }
+
+    public function test_menu_seasonality_allows_border_months_but_excludes_clear_mismatches(): void
+    {
+        $rules = new SeasonalProduce;
+        $this->assertTrue($rules->menuEligible($this->recipe(['Courgette', 'Kiwi']), '2026-10-19'));
+        $this->assertFalse($rules->menuEligible($this->recipe(['Fraises']), '2026-10-19'));
+        $this->assertFalse($rules->menuEligible($this->recipe(['Melon', 'Pêche']), '2026-12-19'));
+        $this->assertFalse($rules->menuEligible($this->recipe(['Courgette']), '2026-01-19'));
+        $this->assertFalse($rules->menuEligible($this->recipe(['Tomate fraîche']), '2026-12-19'));
+        $this->assertTrue($rules->menuEligible($this->recipe(['Tomate fraîche']), '2026-11-19'));
+        $this->assertTrue($rules->menuEligible($this->recipe(['Poire']), '2026-12-19'));
+        $this->assertTrue($rules->menuEligible($this->recipe(['Fraises']), '2026-07-19'));
+        $this->assertTrue($rules->menuEligible($this->recipe(['Fraises surgelées', 'Pêches en conserve']), '2026-10-19'));
+        $this->assertContains('fraise', $rules->excludedFreshProduce('2026-10-19'));
+        $this->assertNotContains('fraise', $rules->excludedFreshProduce('2026-09-30'));
+        $this->assertContains('fraise', $rules->excludedFreshProduce('2026-10-01'));
+    }
+
+    public function test_absence_claims_do_not_create_false_pork_alcohol_or_meat_detections(): void
+    {
+        $rules = new DietaryRules;
+        $recipe = $this->recipe(['Riz', 'Carotte'], ['title' => 'Riz sans porc ni alcool', 'description' => 'Une recette sans viande et sans alcool.', 'steps' => ['Mélanger les ingrédients sans porc ni alcool puis servir.']]);
+        $this->assertTrue($rules->eligible($recipe, ['diets' => ['no_pork', 'no_alcohol', 'vegan']]));
+        $this->assertTrue($rules->eligible($recipe, ['vegetarian' => true]));
+        $this->assertFalse($rules->eligible($this->recipe(['Lardons'], ['title' => 'Recette sans porc']), ['diets' => ['no_pork']]));
+        $this->assertFalse($rules->eligible($this->recipe(['Carotte'], ['title' => 'Recette sans alcool', 'steps' => ['Ajouter le vin blanc puis faire réduire pendant dix minutes.']]), ['diets' => ['no_alcohol']]));
+    }
+
+    public function test_rejection_codes_distinguish_unknown_allergens_and_known_conflicts(): void
+    {
+        $rules = new DietaryRules;
+        $this->assertSame(['allergens_unknown'], $rules->violations($this->recipe(['Riz'], ['allergens' => null]), ['allergens' => ['milk']]));
+        $this->assertSame(['allergen_conflict'], $rules->violations($this->recipe(['Beurre']), ['allergens' => ['milk']]));
+        $this->assertSame(['diet_alcohol'], $rules->violations($this->recipe(['Vin blanc']), ['diets' => ['no_alcohol']]));
+    }
 }

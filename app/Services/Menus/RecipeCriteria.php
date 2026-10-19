@@ -38,29 +38,78 @@ class RecipeCriteria
         return true;
     }
 
-    /**
-     * @param  array<string,mixed>  $criteria
-     */
+    public const REJECTION_LABELS = [
+        'recipe_metadata_missing' => 'informations de recette incomplètes',
+        'difficulty_exceeded' => 'difficulté trop élevée',
+        'food_groups_invalid' => 'composition de la recette incomplète',
+        'vegetarian_incompatible' => 'recette incompatible avec le choix végétarien',
+        'excluded_ingredient' => 'ingrédient à éviter présent',
+        'allergens_unknown' => 'allergènes non renseignés',
+        'allergen_conflict' => 'allergène exclu identifié',
+        'diet_pork' => 'présence de porc ou de charcuterie incompatible',
+        'diet_meat' => 'présence de viande incompatible',
+        'diet_alcohol' => 'présence d’alcool incompatible',
+        'diet_beef' => 'présence de bœuf ou de veau incompatible',
+        'vegan_incompatible' => 'recette incompatible avec le choix végétalien',
+        'out_of_season' => 'produit frais nettement hors saison',
+        'weekly_rotation' => 'rotation hebdomadaire non respectée',
+        'recent_repetition' => 'recette ou ingrédient dominant trop récent',
+        'weekly_ingredients' => 'ingrédient dominant trop répété dans la semaine',
+        'duplicate_title' => 'recette déjà utilisée ou existante',
+        'same_meal_vegetables' => 'même légume dominant dans l’entrée et le plat',
+        'meal_balance' => 'repas incomplet en légumes, féculents ou protéines',
+        'meal_time' => 'temps disponible dépassé',
+    ];
+
+    /** @param array<string,mixed> $criteria */
     public function eligible(Recipe $recipe, array $criteria, ?string $date = null): bool
     {
+        return $this->violations($recipe, $criteria, $date) === [];
+    }
+
+    /** @param array<string,mixed> $criteria
+     * @return list<string> Fixed reason codes only; safe for diagnostics and correction feedback.
+     */
+    public function violations(Recipe $recipe, array $criteria, ?string $date = null): array
+    {
+        $reasons = [];
         if (! in_array($recipe->course_type, ['starter', 'main', 'dessert'], true)
-            || ! $recipe->servings || ! $recipe->total_minutes || ! $recipe->difficulty
-            || $recipe->difficulty > $criteria['difficulty'] || $recipe->ingredients->isEmpty()) {
-            return false;
+            || ! $recipe->servings || ! $recipe->total_minutes || ! $recipe->difficulty || $recipe->ingredients->isEmpty()) {
+            $reasons[] = 'recipe_metadata_missing';
+        }
+        if ($recipe->difficulty > $criteria['difficulty']) {
+            $reasons[] = 'difficulty_exceeded';
         }
         if (! $this->classified($recipe)) {
-            return false;
+            $reasons[] = 'food_groups_invalid';
         }
-        if (($criteria['vegetarian'] ?? false) && $recipe->vegetarian !== true) {
-            return false;
+        if (($criteria['vegetarian'] ?? false) && ($recipe->vegetarian !== true
+            || in_array($recipe->protein_source, ['fish', 'poultry', 'red_meat'], true))) {
+            $reasons[] = 'vegetarian_incompatible';
         }
-        if (($criteria['vegetarian'] ?? false) && in_array($recipe->protein_source, ['fish', 'poultry', 'red_meat'], true)) {
-            return false;
+        if ($this->containsExcluded($recipe, $criteria['excluded'] ?? [])) {
+            $reasons[] = 'excluded_ingredient';
+        }
+        $reasons = [...$reasons, ...$this->dietary->violations($recipe, $criteria)];
+        if (($criteria['seasonal'] ?? false) && ! $this->seasonal->menuEligible($recipe, $date ?? $criteria['start_date'])) {
+            $reasons[] = 'out_of_season';
         }
 
-        return ! $this->containsExcluded($recipe, $criteria['excluded'] ?? [])
-            && $this->dietary->eligible($recipe, $criteria)
-            && (! ($criteria['seasonal'] ?? false) || $this->seasonal->eligible($recipe, $date ?? $criteria['start_date']));
+        return array_values(array_unique($reasons));
+    }
+
+    /** @param array<string,mixed> $criteria */
+    public function seasonalPenalty(Recipe $recipe, array $criteria, ?string $date = null): int
+    {
+        return ($criteria['seasonal'] ?? false) && ! $this->seasonal->eligible($recipe, $date ?? $criteria['start_date']) ? 5000 : 0;
+    }
+
+    /** @param list<string> $reasons */
+    public function rejectionMessage(array $reasons): string
+    {
+        $labels = array_values(array_intersect_key(self::REJECTION_LABELS, array_flip($reasons)));
+
+        return 'Les recettes proposées ne respectent pas les critères : '.implode(' ; ', $labels ?: ['proposition incompatible']).'. Les restrictions ont été conservées. Vous pouvez relancer la génération.';
     }
 
     /**
@@ -69,7 +118,7 @@ class RecipeCriteria
      */
     public function balanced(array $selected, array $criteria = []): bool
     {
-        if (isset($selected['main']) && ($criteria['variety'] ?? 'flexible') === 'varied' && array_diff(['vegetables', 'starch', 'protein'], $selected['main']->food_groups ?? [])) {
+        if (isset($selected['main']) && (($criteria['variety'] ?? 'flexible') === 'varied' || ! in_array('starter', MenuOptions::courses($criteria), true)) && array_diff(['vegetables', 'starch', 'protein'], $selected['main']->food_groups ?? [])) {
             return false;
         }
         if (! isset($selected['starter'], $selected['main'])) {
@@ -150,7 +199,7 @@ class RecipeCriteria
      */
     public function containsExcluded(Recipe $recipe, array $excluded): bool
     {
-        $text = Str::lower(Str::ascii($recipe->title.' '.$recipe->description.' '.$recipe->accompaniment.' '.$recipe->ingredients->pluck('name')->implode(' ')));
+        $text = Str::lower(Str::ascii($this->dietary->declaredText($recipe)));
         foreach ($excluded as $ingredient) {
             if (str_contains($text, Str::lower(Str::ascii(trim($ingredient))))) {
                 return true;
