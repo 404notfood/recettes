@@ -27,6 +27,8 @@ use Illuminate\Support\Str;
  * @property bool $planning_estimated
  * @property list<string>|null $food_groups
  * @property string|null $protein_source
+ * @property list<string>|null $allergens
+ * @property string|null $accompaniment
  * @property string|null $dessert_profile
  * @property Collection<int,PlanningIngredient> $ingredients
  */

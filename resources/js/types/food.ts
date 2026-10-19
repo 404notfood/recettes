@@ -45,6 +45,9 @@ export type Recipe = {
     guest_email?: string | null;
     private_preview?: boolean;
     is_ai_generated?: boolean;
+    allergens?: string[] | null;
+    identified_allergens?: string[];
+    accompaniment?: string | null;
 };
 export type Pagination<T> = {
     data: T[];

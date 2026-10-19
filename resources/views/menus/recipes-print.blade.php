@@ -30,6 +30,8 @@ li { margin-bottom: 10pt; padding-left: 4pt; }
     <div class="eyebrow">LE CARNET À CUISINER / {{ $loop->iteration }} SUR {{ count($recipes) }}</div>
     <h1>{{ $recipe['title'] }}</h1>
     <div class="meta">{{ $plan->people }} personnes @if(isset($recipe['total_minutes'])) / {{ $recipe['total_minutes'] }} min, durée estimée @endif</div>
+    @if(!empty($recipe['accompaniment']))<p>Accompagnement : {{ $recipe['accompaniment'] }}</p>@endif
+    <p class="meta">Allergènes : {{ !isset($recipe['allergens']) ? 'analyse non renseignée' : ($recipe['allergens'] ? implode(', ', array_map(fn ($key) => \App\Services\Menus\DietaryRules::ALLERGENS[$key] ?? $key, $recipe['allergens'])) : 'aucun identifié dans les ingrédients déclarés') }}. Étiquettes et traces à vérifier.</p>
     <h2>Dans le panier</h2>
     <table class="ingredients">
     @foreach($recipe['ingredients'] as $ingredient)

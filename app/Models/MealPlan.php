@@ -15,7 +15,7 @@ use Illuminate\Support\Carbon;
  * @property string $title
  * @property string $status
  * @property Carbon $start_date
- * @property array{days:int, meals:list<string>, quick_slots:list<string>, difficulty:int, quick_minutes:int, normal_minutes:int, vegetarian:bool, excluded:list<string>, preferences:string} $criteria
+ * @property array{days:int, meals:list<string>, quick_slots:list<string>, difficulty:int, quick_minutes:int, normal_minutes:int, vegetarian:bool, excluded:list<string>, preferences:string, start_date?:string, seasonal?:bool, variety?:string, diets?:list<string>, allergens?:list<string>} $criteria
  * @property Collection<int, PlannedMeal> $meals
  */
 class MealPlan extends Model

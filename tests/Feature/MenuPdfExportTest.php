@@ -24,7 +24,7 @@ class MenuPdfExportTest extends TestCase
         $snapshot = [];
         foreach (['starter' => 'Carottes râpées au citron', 'main' => 'Poulet, riz et légumes', 'dessert' => 'Compote de pommes'] as $course => $title) {
             $snapshot[$course] = [
-                'title' => $title, 'servings' => 2,
+                'title' => $title, 'servings' => 2, 'accompaniment' => $course === 'main' ? 'Riz complet et légumes de saison rôtis au four' : null,
                 'ingredients' => [['name' => 'Pomme', 'quantity' => 250, 'unit' => 'g']],
             ];
         }

@@ -1,3 +1,4 @@
+import { allergenLabels } from '@/types/dietary';
 import { Head, Link } from '@inertiajs/react';
 import { ArrowLeft } from 'lucide-react';
 import { type MenuRecipe } from '@/types/menus';
@@ -29,6 +30,20 @@ export default function SavedRecipe({
                     </p>
                 </div>
             </div>
+            {recipe.accompaniment && (
+                <p>Accompagnement : {recipe.accompaniment}</p>
+            )}
+            <p className="my-4 rounded-xl border p-3 text-sm">
+                Allergènes :{' '}
+                {recipe.allergens == null
+                    ? 'analyse non renseignée'
+                    : recipe.allergens.length
+                      ? recipe.allergens
+                            .map((key) => allergenLabels[key] ?? key)
+                            .join(', ')
+                      : 'aucun identifié dans les ingrédients déclarés'}
+                . Étiquettes et traces à vérifier.
+            </p>
             <h2>Dans le panier</h2>
             <ul className="menu-saved-ingredients">
                 {recipe.ingredients.map((item, index) => (

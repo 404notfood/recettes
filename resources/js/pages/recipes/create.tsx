@@ -1,3 +1,4 @@
+import RecipeDietaryFields from '@/components/recipe-dietary-fields';
 import { Link, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowUpRight,
@@ -28,6 +29,8 @@ type Editable = {
     steps: string[];
     tags: string[];
     status: string;
+    allergens?: string[] | null;
+    accompaniment?: string | null;
 };
 type RecipeForm = {
     title: string;
@@ -45,6 +48,8 @@ type RecipeForm = {
     image: File | null;
     intent: string;
     website: string;
+    allergens: string[] | null;
+    accompaniment: string;
 };
 
 export default function CreateRecipe({
@@ -79,6 +84,8 @@ export default function CreateRecipe({
         image: null,
         intent: 'submit',
         website: '',
+        allergens: recipe?.allergens ?? null,
+        accompaniment: recipe?.accompaniment ?? '',
     });
     const errors = form.errors as Partial<Record<string, string>>;
     const data = form.data;
@@ -93,6 +100,7 @@ export default function CreateRecipe({
         form.transform((d) => ({
             ...d,
             intent,
+            allergens_assessed: d.allergens !== null ? 1 : 0,
             ...(recipe ? { _method: 'put' } : {}),
         }));
         form.post(recipe ? `/mes-recettes/${recipe.id}` : '/recettes', {
@@ -110,12 +118,13 @@ export default function CreateRecipe({
         key: 'name' | 'quantity' | 'unit',
         value: string,
     ) {
-        form.setData(
-            'ingredients',
-            data.ingredients.map((item, i) =>
+        form.setData({
+            ...data,
+            ingredients: data.ingredients.map((item, i) =>
                 i === index ? { ...item, [key]: value } : item,
             ),
-        );
+            allergens: key === 'name' ? null : data.allergens,
+        });
     }
     const completed = [
         Boolean(data.title && data.description && data.category_id),
@@ -468,6 +477,15 @@ export default function CreateRecipe({
                             </div>
                         ))}
                         {error('ingredients')}
+                        <RecipeDietaryFields
+                            allergens={data.allergens}
+                            accompaniment={data.accompaniment}
+                            onChange={(value) =>
+                                form.setData({ ...data, ...value })
+                            }
+                        />
+                        {error('allergens')}
+                        {error('accompaniment')}
                         <Button
                             type="button"
                             variant="outline"

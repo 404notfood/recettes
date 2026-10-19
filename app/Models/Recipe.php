@@ -2,6 +2,8 @@
 
 namespace App\Models;
 
+use App\Services\Menus\DietaryRules;
+use App\Services\Menus\PlanningRecipe;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
@@ -33,6 +35,8 @@ use Illuminate\Support\Carbon;
  * @property string|null $main_ingredient
  * @property array<int,string>|null $food_groups
  * @property string|null $protein_source
+ * @property list<string>|null $allergens
+ * @property string|null $accompaniment
  * @property string|null $dessert_profile
  * @property bool $is_ai_generated
  * @property bool $planning_estimated
@@ -45,24 +49,44 @@ use Illuminate\Support\Carbon;
  */
 class Recipe extends Model
 {
+    private bool $dietaryAssessmentProvided = false;
+
+    /** @param array<string,mixed> $attributes
+     * @return $this
+     */
+    public function fill(array $attributes)
+    {
+        if (array_key_exists('allergens', $attributes)) {
+            $this->dietaryAssessmentProvided = true;
+        }
+
+        return parent::fill($attributes);
+    }
+
     use SoftDeletes;
 
     protected static function booted(): void
     {
+        static::saved(function (Recipe $recipe) {
+            $recipe->dietaryAssessmentProvided = false;
+        });
         static::updating(function (Recipe $recipe) {
+            if ($recipe->isDirty('ingredients') && ! $recipe->dietaryAssessmentProvided && ! $recipe->isDirty('allergens')) {
+                $recipe->allergens = null;
+            }
             if ($recipe->isDirty(['ingredients', 'steps', 'servings', 'prep_time', 'cook_time', 'tags', 'category_id'])) {
                 $recipe->forceFill(['course_type' => null, 'total_minutes' => null, 'vegetarian' => null, 'main_ingredient' => null, 'food_groups' => null, 'protein_source' => null, 'dessert_profile' => null]);
             }
         });
     }
 
-    protected $fillable = ['user_id', 'category_id', 'title', 'slug', 'description', 'author_name', 'guest_email', 'image', 'prep_time', 'cook_time', 'servings', 'difficulty', 'ingredients', 'steps', 'tags', 'status', 'featured', 'published_at', 'proposed_changes', 'moderation_note'];
+    protected $fillable = ['user_id', 'category_id', 'title', 'slug', 'description', 'author_name', 'guest_email', 'image', 'prep_time', 'cook_time', 'servings', 'difficulty', 'ingredients', 'steps', 'tags', 'status', 'featured', 'published_at', 'proposed_changes', 'moderation_note', 'allergens', 'accompaniment'];
 
     protected $hidden = ['guest_email', 'proposed_changes', 'moderation_note'];
 
     protected function casts(): array
     {
-        return ['ingredients' => 'array', 'steps' => 'array', 'tags' => 'array', 'proposed_changes' => 'array', 'featured' => 'boolean', 'prep_time' => 'integer', 'cook_time' => 'integer', 'servings' => 'integer', 'published_at' => 'datetime', 'food_groups' => 'array', 'vegetarian' => 'boolean', 'is_ai_generated' => 'boolean', 'planning_estimated' => 'boolean', 'total_minutes' => 'integer'];
+        return ['ingredients' => 'array', 'steps' => 'array', 'tags' => 'array', 'proposed_changes' => 'array', 'featured' => 'boolean', 'prep_time' => 'integer', 'cook_time' => 'integer', 'servings' => 'integer', 'published_at' => 'datetime', 'allergens' => 'array', 'food_groups' => 'array', 'vegetarian' => 'boolean', 'is_ai_generated' => 'boolean', 'planning_estimated' => 'boolean', 'total_minutes' => 'integer'];
     }
 
     /** @return BelongsTo<Category, $this> */
@@ -102,7 +126,7 @@ class Recipe extends Model
             'reviews_count' => (int) ($this->getAttribute('reviews_count') ?? 0),
         ];
         if ($detail) {
-            $data += ['ingredients' => $this->ingredients, 'steps' => $this->steps, 'published_at' => $this->published_at?->toIso8601String()];
+            $data += ['allergens' => $this->allergens, 'identified_allergens' => app(DietaryRules::class)->detectedAllergens(PlanningRecipe::fromRecord($this)), 'accompaniment' => $this->accompaniment, 'ingredients' => $this->ingredients, 'steps' => $this->steps, 'published_at' => $this->published_at?->toIso8601String()];
             $credit = config('recipe-photo-credits.'.$this->slug);
             if (is_array($credit) && ($credit['image'] ?? null) === $this->image) {
                 $data['image_credit'] = $credit;

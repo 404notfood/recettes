@@ -1,3 +1,4 @@
+import MenuDietaryFields from '@/components/menu-dietary-fields';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
@@ -48,6 +49,10 @@ export default function Menus({
         vegetarian: false as boolean,
         excluded: [] as string[],
         preferences: '',
+        seasonal: true as boolean,
+        variety: 'varied',
+        diets: [] as string[],
+        allergens: [] as string[],
     });
     const dates = Array.from({ length: form.data.days }, (_, index) => {
         const date = new Date(`${form.data.start_date || today}T12:00:00`);
@@ -422,6 +427,12 @@ export default function Menus({
                                     </table>
                                 </div>
                             </fieldset>
+                            <MenuDietaryFields
+                                data={form.data}
+                                onChange={(value) =>
+                                    form.setData({ ...form.data, ...value })
+                                }
+                            />
                             <div className="space-y-4">
                                 <label className="flex items-center gap-2 text-sm">
                                     <input

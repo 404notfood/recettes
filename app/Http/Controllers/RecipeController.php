@@ -6,6 +6,9 @@ use App\Http\Requests\RecipeRequest;
 use App\Models\Category;
 use App\Models\Recipe;
 use App\Models\Review;
+use App\Services\Menus\DietaryRules;
+use App\Services\Menus\PlanningRecipe;
+use App\Services\Menus\SeasonalProduce;
 use App\Services\RecipeImages;
 use Illuminate\Database\Eloquent\Collection;
 use Illuminate\Http\RedirectResponse;
@@ -13,6 +16,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 use Inertia\Inertia;
 use Inertia\Response;
 
@@ -29,7 +33,7 @@ class RecipeController extends Controller
 
     public function index(Request $request): Response
     {
-        $filters = $request->validate(['source' => 'nullable|in:menus', 'q' => 'nullable|string|max:100', 'category' => 'nullable|string|max:80', 'difficulty' => 'nullable|in:facile,moyen,avance', 'time' => 'nullable|integer|in:15,30,60', 'tag' => 'nullable|in:vegetarien,vegan,sans-gluten,rapide,economique,de-saison', 'sort' => 'nullable|in:recent,time,rating']);
+        $filters = $request->validate(['source' => 'nullable|in:menus', 'q' => 'nullable|string|max:100', 'category' => 'nullable|string|max:80', 'difficulty' => 'nullable|in:facile,moyen,avance', 'time' => 'nullable|integer|in:15,30,60', 'tag' => 'nullable|in:vegetarien,vegan,sans-gluten,rapide,economique,de-saison', 'sort' => 'nullable|in:recent,time,rating', 'seasonal' => 'sometimes|boolean', 'diets' => 'sometimes|array|max:7', 'diets.*' => ['required', Rule::in(array_keys(DietaryRules::DIETS))], 'allergens' => 'sometimes|array|max:14', 'allergens.*' => ['required', Rule::in(array_keys(DietaryRules::ALLERGENS))]]);
         $menuLibrary = ($filters['source'] ?? null) === 'menus';
         abort_if($menuLibrary && ! $request->user(), 403);
         $query = Recipe::with('category')->withAvg('reviews', 'rating')->withCount('reviews');
@@ -59,6 +63,17 @@ class RecipeController extends Controller
             'rating' => $query->orderByRaw('reviews_avg_rating DESC NULLS LAST'),
             default => $menuLibrary ? $query->latest('created_at') : $query->latest('published_at'),
         };
+        if (! empty($filters['seasonal']) || ! empty($filters['diets']) || ! empty($filters['allergens'])) {
+            $dietary = app(DietaryRules::class);
+            $seasonal = app(SeasonalProduce::class);
+            $date = now('Europe/Paris')->format('Y-m-d');
+            $ids = (clone $query)->get()->filter(function (Recipe $record) use ($dietary, $seasonal, $date, $filters) {
+                $recipe = PlanningRecipe::fromRecord($record);
+
+                return $dietary->eligible($recipe, $filters) && (empty($filters['seasonal']) || $seasonal->eligible($recipe, $date));
+            })->modelKeys();
+            $query->whereIn('id', $ids);
+        }
         $recipes = $query->orderByDesc('id')->paginate(12)->withQueryString()->through(fn (Recipe $recipe) => $recipe->publicData() + ['private_preview' => $recipe->status !== 'published']);
 
         return Inertia::render('recipes/index', ['recipes' => $recipes, 'categories' => $this->categories(), 'filters' => $filters, 'menuLibraryAvailable' => (bool) $request->user()]);
@@ -108,7 +123,7 @@ class RecipeController extends Controller
     {
         Gate::authorize('update', $recipe);
 
-        return Inertia::render('recipes/create', ['categories' => Category::orderBy('id')->get(['id', 'name', 'slug', 'icon']), 'recipe' => array_replace($recipe->only(['id', 'title', 'description', 'category_id', 'prep_time', 'cook_time', 'servings', 'difficulty', 'ingredients', 'steps', 'tags', 'status']), $recipe->proposed_changes ?? [])]);
+        return Inertia::render('recipes/create', ['categories' => Category::orderBy('id')->get(['id', 'name', 'slug', 'icon']), 'recipe' => array_replace($recipe->only(['id', 'title', 'description', 'category_id', 'prep_time', 'cook_time', 'servings', 'difficulty', 'ingredients', 'steps', 'tags', 'status', 'allergens', 'accompaniment']), $recipe->proposed_changes ?? [])]);
     }
 
     public function update(RecipeRequest $request, Recipe $recipe, RecipeImages $images): RedirectResponse

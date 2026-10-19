@@ -34,6 +34,8 @@ export interface MenuRecipe {
     food_groups?: string[];
     protein_source?: string | null;
     dessert_profile?: string | null;
+    allergens?: string[] | null;
+    accompaniment?: string | null;
     ingredients: {
         name: string;
         quantity: number | string | null;
@@ -68,6 +70,10 @@ export interface MealPlan extends MealPlanSummary {
         normal_minutes: number;
         difficulty: number;
         vegetarian: boolean;
+        seasonal?: boolean;
+        variety?: string;
+        diets?: string[];
+        allergens?: string[];
     };
     meals: PlannedMeal[];
 }

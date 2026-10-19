@@ -1,3 +1,4 @@
+import RecipeCatalogueDietary from '@/components/recipe-catalogue-dietary';
 import { Link, router } from '@inertiajs/react';
 import {
     Search,
@@ -28,6 +29,9 @@ type Filters = {
     time?: string;
     tag?: string;
     sort?: string;
+    seasonal?: string;
+    diets?: string[];
+    allergens?: string[];
 };
 export default function Recipes({
     recipes,
@@ -121,6 +125,31 @@ export default function Recipes({
                         Rechercher <ArrowRight size={16} />
                     </Button>
                 </form>
+                <RecipeCatalogueDietary
+                    key={JSON.stringify([
+                        filters.seasonal,
+                        filters.diets,
+                        filters.allergens,
+                    ])}
+                    initial={{
+                        seasonal: Boolean(Number(filters.seasonal)),
+                        variety: 'flexible',
+                        diets: filters.diets ?? [],
+                        allergens: filters.allergens ?? [],
+                    }}
+                    onApply={(data) =>
+                        router.get(
+                            '/recettes',
+                            {
+                                ...filters,
+                                seasonal: data.seasonal ? 1 : 0,
+                                diets: data.diets,
+                                allergens: data.allergens,
+                            },
+                            { preserveState: true, preserveScroll: true },
+                        )
+                    }
+                />
                 <div className="category-pills">
                     <button
                         className={!filters.category ? 'selected' : ''}

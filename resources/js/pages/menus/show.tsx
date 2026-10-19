@@ -1,3 +1,4 @@
+import { allergenLabels, dietLabels } from '@/types/dietary';
 import { Head, Link, router, usePoll } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -167,6 +168,35 @@ export default function MenuShow({
                             : 'Changer les repas libres'}
                     </Button>
                 </div>
+            </div>
+            <div className="mb-5 rounded-xl border p-4 text-sm">
+                <p>
+                    {plan.criteria.seasonal
+                        ? 'Fruits et légumes de saison · France métropolitaine'
+                        : 'Toutes saisons'}{' '}
+                    ·{' '}
+                    {plan.criteria.variety === 'varied'
+                        ? 'Aucune recette répétée par semaine'
+                        : 'Diversité souple'}
+                </p>
+                {!!plan.criteria.diets?.length && (
+                    <p className="mt-2">
+                        Choix alimentaires :{' '}
+                        {plan.criteria.diets
+                            .map((key) => dietLabels[key] ?? key)
+                            .join(', ')}
+                        .
+                    </p>
+                )}
+                {!!plan.criteria.allergens?.length && (
+                    <p className="mt-2">
+                        Allergènes exclus :{' '}
+                        {plan.criteria.allergens
+                            .map((key) => allergenLabels[key] ?? key)
+                            .join(', ')}
+                        . Vérifiez étiquettes et traces.
+                    </p>
+                )}
             </div>
             {busy && (
                 <div role="status" aria-live="polite" className="menu-notice">
@@ -355,6 +385,22 @@ export default function MenuShow({
                                                                         }
                                                                     />
                                                                 </Link>
+                                                                {meal.snapshot[
+                                                                    course
+                                                                ]
+                                                                    .accompaniment && (
+                                                                    <p className="mt-1 text-xs text-muted-foreground">
+                                                                        Accompagnement
+                                                                        :{' '}
+                                                                        {
+                                                                            meal
+                                                                                .snapshot[
+                                                                                course
+                                                                            ]
+                                                                                .accompaniment
+                                                                        }
+                                                                    </p>
+                                                                )}
                                                             </div>
                                                             <button
                                                                 type="button"

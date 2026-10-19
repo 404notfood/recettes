@@ -6,6 +6,7 @@ use App\Jobs\GenerateMealPlan;
 use App\Models\MealPlan;
 use App\Models\PlannedMeal;
 use App\Models\Recipe;
+use App\Services\Menus\DietaryRules;
 use App\Services\Menus\MenuPdfExporter;
 use App\Services\Menus\OpenAiRecipeService;
 use App\Services\Menus\ShoppingList;
@@ -46,6 +47,9 @@ class MealPlanController extends Controller
             'vegetarian' => 'required|boolean', 'excluded' => 'present|array|max:20',
             'excluded.*' => 'required|string|min:2|max:80|distinct',
             'preferences' => 'nullable|string|max:1000',
+            'seasonal' => 'sometimes|boolean', 'variety' => ['sometimes', Rule::in(['varied', 'flexible'])],
+            'diets' => 'sometimes|array|max:7', 'diets.*' => ['required', 'distinct', Rule::in(array_keys(DietaryRules::DIETS))],
+            'allergens' => 'sometimes|array|max:14', 'allergens.*' => ['required', 'distinct', Rule::in(array_keys(DietaryRules::ALLERGENS))],
         ]);
         foreach ($data['quick_slots'] as $slot) {
             [$day, $meal] = explode(':', $slot);

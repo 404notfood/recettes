@@ -50,11 +50,12 @@ h2 { font: 20px Georgia, serif; background: #eef0e4; padding: 8px; margin: 0; }
 <td>@if($meal)<small>{{ $meal->total_minutes }} min</small>
 @foreach(['starter' => 'Entrée', 'main' => 'Plat', 'dessert' => 'Dessert'] as $course => $label)
 <div class="course"><span>{{ $label }}</span>{{ $meal->snapshot[$course]['title'] ?? '' }}</div>
+@if($course === 'main' && !empty($meal->snapshot[$course]['accompaniment']))<div class="course"><span>Accompagnement</span>{{ $meal->snapshot[$course]['accompaniment'] }}</div>@endif
 @endforeach
 @else Repas libre @endif</td>
 @endforeach</tr>
 @endfor
-</tbody></table></section>
+</tbody></table><p class="meta">@include('menus.dietary-note')</p></section>
 @endfor
 @endif
 @if($document !== 'menus')

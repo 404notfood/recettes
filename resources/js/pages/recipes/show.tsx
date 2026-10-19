@@ -1,3 +1,4 @@
+import { allergenLabels } from '@/types/dietary';
 import { Link, router, useForm, usePage } from '@inertiajs/react';
 import {
     ArrowLeft,
@@ -298,6 +299,20 @@ export default function RecipeShow({
                         </div>
                         <h1>{recipe.title}</h1>
                         <p>{recipe.description}</p>
+                        {recipe.accompaniment && (
+                            <p>Accompagnement : {recipe.accompaniment}</p>
+                        )}
+                        <p className="my-4 rounded-xl border p-3 text-sm">
+                            Allergènes identifiés :{' '}
+                            {recipe.identified_allergens?.length
+                                ? recipe.identified_allergens
+                                      .map((key) => allergenLabels[key] ?? key)
+                                      .join(', ')
+                                : recipe.allergens == null
+                                  ? 'analyse non renseignée'
+                                  : 'aucun dans les ingrédients déclarés'}
+                            . Vérifiez les étiquettes et les risques de traces.
+                        </p>
                         <div className="detail-tags">
                             {recipe.tags.map((tag) => (
                                 <span key={tag}>{tagLabels[tag] || tag}</span>

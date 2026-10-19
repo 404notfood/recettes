@@ -7,7 +7,7 @@ use Illuminate\Support\Str;
 
 class CatalogueMetadata
 {
-    public const FIELDS = ['course_type', 'total_minutes', 'vegetarian', 'main_ingredient', 'food_groups', 'protein_source', 'dessert_profile', 'planning_estimated'];
+    public const FIELDS = ['course_type', 'total_minutes', 'vegetarian', 'main_ingredient', 'food_groups', 'protein_source', 'dessert_profile', 'planning_estimated', 'allergens', 'accompaniment'];
 
     public function __construct(private ShoppingCategories $categories) {}
 

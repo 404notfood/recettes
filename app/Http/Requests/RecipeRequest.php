@@ -2,10 +2,19 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Menus\DietaryRules;
 use Illuminate\Foundation\Http\FormRequest;
+use Illuminate\Validation\Rule;
 
 class RecipeRequest extends FormRequest
 {
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('allergens_assessed')) {
+            $this->merge(['allergens' => $this->boolean('allergens_assessed') ? ($this->input('allergens') ?? []) : null]);
+        }
+    }
+
     public function authorize(): bool
     {
         return true;
@@ -35,6 +44,9 @@ class RecipeRequest extends FormRequest
             'tags.*' => ['string', 'in:vegetarien,vegan,sans-gluten,rapide,economique,de-saison'],
             'intent' => ['required', 'in:submit,draft'],
             'website' => ['nullable', 'max:0'],
+            'accompaniment' => 'nullable|string|max:255',
+            'allergens' => 'nullable|array|max:14',
+            'allergens.*' => ['required', 'distinct', Rule::in(array_keys(DietaryRules::ALLERGENS))],
         ];
     }
 
