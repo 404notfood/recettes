@@ -171,10 +171,10 @@ class RecipeCriteria
         foreach ([
             'gratin savoyard' => 'croziflette|tartiflette|reblochonnade',
             'couscous' => 'couscous|semoule',
-            'pÃ¢tes' => 'pates|spaghetti|penne|macaroni|tagliatelle|coquillette|crozets',
+            'pâtes' => 'pates|spaghetti|penne|macaroni|tagliatelle|coquillette|crozets',
             'risotto' => 'risotto', 'soupe' => 'soupe|potage|veloute|bouillon',
             'salade' => 'salade', 'gratin' => 'gratin|tartiflette',
-            'omelette' => 'omelette|frittata', 'tarte salÃ©e' => 'quiche|tarte',
+            'omelette' => 'omelette|frittata', 'tarte salée' => 'quiche|tarte',
             'curry' => 'curry|dahl|dal', 'galette' => 'galette|crepe',
             'sandwich' => 'sandwich|croque|burger|wrap', 'pizza' => 'pizza',
         ] as $family => $pattern) {

@@ -120,14 +120,14 @@ class HybridMenuPlanner
                         foreach ($this->ai->generate($context) as $data) {
                             $ingredients = $data['ingredients'];
                             if (! is_array($ingredients)) {
-                                throw new PlanningException('Les ingrÃ©dients proposÃ©s sont incomplets.');
+                                throw new PlanningException('Les ingrédients proposés sont incomplets.');
                             }
                             unset($data['ingredients']);
                             $recipe = new Recipe([...$data, 'user_id' => $plan->user_id, 'is_ai_generated' => true, 'planning_estimated' => true]);
                             $recipe->setRelation('ingredients', collect($ingredients)->map(fn ($ingredient) => new Ingredient($ingredient)));
                             $fingerprint = $this->rules->fingerprint($recipe);
                             if (! $this->rules->eligible($recipe, $criteria, $date)) {
-                                throw new PlanningException('Une recette crÃ©Ã©e ne respecte pas les critÃ¨res. Ajustez les critÃ¨res et rÃ©essayez.');
+                                throw new PlanningException('Une recette créée ne respecte pas les critères. Ajustez les critères et réessayez.');
                             }
                             $conflict = $conflict || ! $this->rules->allowedByWeek($recipe, $counts, $weekMeals, $criteria)
                                 || ! $this->diversity->allowed($recipe->course_type, $this->diversity->profile($recipe), $recent)
@@ -147,16 +147,16 @@ class HybridMenuPlanner
                             break;
                         }
                         $context['avoid_titles'] = array_values(array_unique([...$context['avoid_titles'], ...array_map(fn ($recipe) => $recipe->title, $newRecipes)]));
-                        $context['diversity_retry'] = 'La proposition prÃ©cÃ©dente rÃ©pÃ©tait un plat ou un ingrÃ©dient dominant. Change rÃ©ellement de plat et de lÃ©gumes, en respectant les deux jours voisins et les autres rÃ´les du repas.';
+                        $context['diversity_retry'] = 'La proposition précédente répétait un plat ou un ingrédient dominant. Change réellement de plat et de légumes, en respectant les deux jours voisins et les autres rôles du repas.';
                         if ($attempt === 2) {
-                            throw new PlanningException('Les propositions restent trop rÃ©pÃ©titives. RÃ©essayez avec davantage de temps ou des envies moins restrictives.');
+                            throw new PlanningException('Les propositions restent trop répétitives. Réessayez avec davantage de temps ou des envies moins restrictives.');
                         }
                     }
                 }
                 if (count($selected) !== 3 || ! $this->rules->balanced($selected, $criteria)
                     || (! isset($fixed['starter'], $fixed['main']) && ! $this->diversity->compatible($selected))
                     || array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $selected)) > $limit) {
-                    throw new PlanningException('Impossible de composer un repas complet avec lÃ©gumes, fÃ©culents et protÃ©ines dans le temps demandÃ©.');
+                    throw new PlanningException('Impossible de composer un repas complet avec légumes, féculents et protéines dans le temps demandé.');
                 }
                 $this->trackWeek(array_map(fn ($recipe) => $this->snapshot($recipe), $selected), $weekly[$week]);
                 foreach ($selected as $recipe) {
@@ -171,14 +171,14 @@ class HybridMenuPlanner
 
         // Verify newly generated recipes against the same preferences before saving anything.
         if ($drafts && count($this->matchingPreferences(collect($drafts), $criteria)) !== count($drafts)) {
-            throw new PlanningException('Les recettes proposÃ©es ne respectent pas vos envies culinaires. RÃ©essayez la gÃ©nÃ©ration.');
+            throw new PlanningException('Les recettes proposées ne respectent pas vos envies culinaires. Réessayez la génération.');
         }
 
         // API calls happen before the transaction: no partially imported menu on failure.
         DB::transaction(function () use ($plan, $enriched, $drafts, $prepared) {
             $current = MealPlan::whereKey($plan->id)->lockForUpdate()->firstOrFail();
             if ($current->status !== 'generating') {
-                throw new PlanningException('Ce planning nâ€™est plus en cours de gÃ©nÃ©ration.');
+                throw new PlanningException('Ce planning n’est plus en cours de génération.');
             }
             foreach ($enriched as $recipe) {
                 $recipe->saveMetadata();
@@ -211,7 +211,7 @@ class HybridMenuPlanner
             return $catalogue;
         }
         if (! $this->ai->configured()) {
-            throw new PlanningException('La prise en compte de vos envies nÃ©cessite le service de crÃ©ation de recettes. VÃ©rifiez sa configuration cÃ´tÃ© serveur.');
+            throw new PlanningException('La prise en compte de vos envies nécessite le service de création de recettes. Vérifiez sa configuration côté serveur.');
         }
         $matches = collect();
         // Temporary local IDs also cover new recipes that have not been saved yet.
@@ -387,7 +387,7 @@ class HybridMenuPlanner
     {
         $recipe = new Recipe;
         if (! isset($snapshot['ingredients']) || ! is_array($snapshot['ingredients'])) {
-            throw new PlanningException('Cette fiche conservÃ©e ne contient pas ses ingrÃ©dients.');
+            throw new PlanningException('Cette fiche conservée ne contient pas ses ingrédients.');
         }
         $recipe->forceFill(collect($snapshot)->except('ingredients')->all());
         $recipe->setRelation('ingredients', collect($snapshot['ingredients'])->map(fn ($data) => new Ingredient($data)));
