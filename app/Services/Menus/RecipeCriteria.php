@@ -57,6 +57,9 @@ class RecipeCriteria
         'weekly_ingredients' => 'ingrédient dominant trop répété dans la semaine',
         'duplicate_title' => 'recette déjà utilisée ou existante',
         'same_meal_vegetables' => 'même légume dominant dans l’entrée et le plat',
+        'same_meal_ingredients' => 'ingrédient marquant répété entre plusieurs éléments du repas',
+        'celebration_dessert' => 'dessert de fête insuffisamment festif : prévoir un véritable dessert de célébration adapté à l’occasion',
+        'seasonal_dish_style' => 'type de plat de saison demandé non respecté : prévoir le gratin ou le mijoté demandé',
         'meal_balance' => 'repas incomplet en légumes, féculents ou protéines',
         'meal_time' => 'temps disponible dépassé',
     ];
@@ -91,6 +94,9 @@ class RecipeCriteria
             $reasons[] = 'excluded_ingredient';
         }
         $reasons = [...$reasons, ...$this->dietary->violations($recipe, $criteria)];
+        if (! MenuOptions::suitableDessert($recipe, $criteria)) {
+            $reasons[] = 'celebration_dessert';
+        }
         if (($criteria['seasonal'] ?? false) && ! $this->seasonal->menuEligible($recipe, $date ?? $criteria['start_date'])) {
             $reasons[] = 'out_of_season';
         }
@@ -139,7 +145,7 @@ class RecipeCriteria
             return false;
         }
         if ($recipe->course_type === 'dessert' && $recipe->dessert_profile === 'treat'
-            && ($counts['treat'] ?? 0) >= ($weekMeals < 3 ? 1 : 2)) {
+            && ! MenuOptions::celebration($criteria) && ($counts['treat'] ?? 0) >= ($weekMeals < 3 ? 1 : 2)) {
             return false;
         }
         if ($recipe->course_type === 'main') {

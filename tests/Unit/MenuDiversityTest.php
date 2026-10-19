@@ -40,4 +40,24 @@ class MenuDiversityTest extends TestCase
         $this->assertTrue($diversity->compatible(['starter' => $starter, 'main' => $main]));
         $this->assertSame([], $diversity->profile($this->recipe('Pommes de terre vapeur', 'pomme de terre'))['ingredients']);
     }
+
+    public function test_starter_and_dessert_cannot_repeat_pears_or_featured_nuts(): void
+    {
+        $diversity = new MenuDiversity(new RecipeCriteria);
+        $starter = $this->recipe('Potage de panais, poire et noisettes', 'panais');
+        $this->assertFalse($diversity->compatible(['starter' => $starter, 'dessert' => $this->recipe('Poires rôties', 'poire')]));
+        $this->assertFalse($diversity->compatible(['starter' => $starter, 'dessert' => $this->recipe('Bûche chocolat noisettes', 'chocolat')]));
+        $this->assertTrue($diversity->compatible(['starter' => $starter, 'dessert' => $this->recipe('Bûche chocolat clémentine', 'chocolat')]));
+        $this->assertTrue($diversity->compatible(['main' => $this->recipe('Dinde rôtie', 'dinde', [['name' => 'Noisettes concassées', 'quantity' => 10, 'unit' => 'g']]), 'dessert' => $this->recipe('Bûche noisettes', 'noisette')]));
+    }
+
+    public function test_retained_courses_do_not_hide_conflicts_with_a_replacement_dessert(): void
+    {
+        $diversity = new MenuDiversity(new RecipeCriteria);
+        $starter = $this->recipe('Carottes et poires en salade', 'carotte');
+        $main = $this->recipe('Poulet aux carottes', 'poulet');
+        $fixed = ['starter' => $starter, 'main' => $main];
+        $this->assertTrue($diversity->compatible([...$fixed, 'dessert' => $this->recipe('Bûche clémentine', 'clementine')], $fixed));
+        $this->assertFalse($diversity->compatible([...$fixed, 'dessert' => $this->recipe('Bûche poire', 'poire')], $fixed));
+    }
 }

@@ -91,7 +91,13 @@ export default function MenuShow({
     }
     return (
         <div className="site-container menu-page">
-            <Head title="Mon menu de la semaine">
+            <Head
+                title={
+                    plan.days === 1
+                        ? 'Mon menu du jour'
+                        : 'Mon planning de menus'
+                }
+            >
                 <meta name="robots" content="noindex,nofollow" />
             </Head>
             <nav
@@ -234,9 +240,18 @@ export default function MenuShow({
                     <div className="menu-weekbar">
                         <div>
                             <span className="menu-eyebrow">
-                                LE CARNET DE LA SEMAINE
+                                {plan.days === 1
+                                    ? 'LE MENU DU JOUR'
+                                    : 'LE CARNET DE LA SEMAINE'}
                             </span>
-                            <h2>Sept jours, de bonnes idées.</h2>
+                            <h2>
+                                {plan.days === 1
+                                    ? plan.criteria.occasion &&
+                                      plan.criteria.occasion !== 'everyday'
+                                        ? `Votre menu · ${occasionLabel}`
+                                        : 'Un jour, de bonnes idées.'
+                                    : 'Sept jours, de bonnes idées.'}
+                            </h2>
                         </div>
                         {plan.days > 7 && (
                             <div

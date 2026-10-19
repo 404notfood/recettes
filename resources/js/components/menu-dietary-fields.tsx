@@ -65,7 +65,9 @@ export default function MenuDietaryFields({
                         Mode varié : légumes, féculents et protéines dans le
                         plat, accompagnement compris. Deux plats de légumes secs
                         sur une semaine d’au moins 7 repas, et du poisson si
-                        votre régime l’autorise.
+                        votre régime l’autorise. En automne et en hiver, place
+                        aussi aux gratins, mijotés et plats en sauce, selon le
+                        temps disponible et vos choix alimentaires.
                     </p>
                 )}
             </fieldset>

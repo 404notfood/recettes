@@ -10,6 +10,8 @@ use App\Models\User;
 use App\Services\Menus\HybridMenuPlanner;
 use App\Services\Menus\MenuOptions;
 use App\Services\Menus\MenuPdfExporter;
+use App\Services\Menus\PlanningRecipe;
+use App\Services\Menus\RecipeCriteria;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Routing\Middleware\ThrottleRequests;
 use Illuminate\Support\Facades\Http;
@@ -53,7 +55,7 @@ class DietaryMenuPlanningTest extends TestCase
 
     private function plan(array $criteria = []): MealPlan
     {
-        $plan = MealPlan::create(['user_id' => User::factory()->create()->id, 'title' => 'Menu adapté', 'start_date' => '2026-10-19', 'days' => $criteria['days'] ?? 1, 'people' => 2, 'status' => 'queued', 'criteria' => [
+        $plan = MealPlan::create(['user_id' => User::factory()->create()->id, 'title' => 'Menu adapté', 'start_date' => $criteria['start_date'] ?? '2026-10-19', 'days' => $criteria['days'] ?? 1, 'people' => 2, 'status' => 'queued', 'criteria' => [
             'start_date' => '2026-10-19', 'days' => 1, 'people' => 2, 'meals' => ['lunch'], 'difficulty' => 1, 'quick_minutes' => 30, 'normal_minutes' => 90, 'quick_slots' => [], 'vegetarian' => false, 'excluded' => [], 'preferences' => '', 'seasonal' => true, 'variety' => 'varied', 'diets' => [], 'allergens' => [], ...$criteria,
         ]]);
         (new GenerateMealPlan($plan->id))->handle(app(HybridMenuPlanner::class));
@@ -453,6 +455,154 @@ class DietaryMenuPlanningTest extends TestCase
         $this->assertSame($dessert, $meal->snapshot['dessert']);
         $this->assertNull($meal->starter_recipe_id);
         $this->assertArrayNotHasKey('starter', $meal->snapshot);
+        Http::assertNothingSent();
+    }
+
+    public function test_christmas_catalogue_uses_a_celebration_dessert_instead_of_faster_roasted_pears(): void
+    {
+        $this->recipe('starter', ['title' => 'Potage de panais, poire et noisettes', 'main_ingredient' => 'Panais'], ['Panais', 'Poire', 'Noisettes']);
+        $this->recipe('main', ['title' => 'Dinde aux châtaignes et chou rouge', 'main_ingredient' => 'Dinde', 'protein_source' => 'poultry', 'vegetarian' => false], ['Dinde', 'Châtaignes', 'Polenta', 'Chou rouge']);
+        $ordinary = $this->recipe('dessert', ['title' => 'Poires rôties de Noël aux noisettes', 'main_ingredient' => 'Poire', 'total_minutes' => 1], ['Poire', 'Noisettes']);
+        $festive = $this->recipe('dessert', ['title' => 'Bûche chocolat clémentine', 'main_ingredient' => 'Chocolat', 'dessert_profile' => 'treat', 'total_minutes' => 40], ['Chocolat noir', 'Clémentine']);
+        config(['services.openai.key' => 'test-not-a-secret']);
+        // Even an overly broad thematic classifier cannot pass the ordinary dessert.
+        Http::fake(['api.openai.com/*' => Http::response(['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipe_ids' => [0, 1, 2, 3]])]]]]])]);
+        $plan = $this->plan(['occasion' => 'christmas', 'start_date' => '2026-12-25']);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($festive->id, $plan->meals->first()->dessert_recipe_id);
+        $this->assertNotSame($ordinary->id, $plan->meals->first()->dessert_recipe_id);
+        Http::assertSentCount(1);
+    }
+
+    public function test_christmas_generation_corrects_an_ordinary_dessert_and_keeps_dietary_exclusions(): void
+    {
+        $this->recipe('starter');
+        $this->recipe('main');
+        $bad = $this->generatedDessert('Poire', 'Poires rôties de Noël');
+        $good = [...$this->generatedDessert('Clémentine', 'Bûche végétale chocolat clémentine sans gluten'), 'dessert_profile' => 'treat'];
+        $match = fn ($ids) => ['status' => 'completed', 'output' => [['content' => [['type' => 'output_text', 'text' => json_encode(['recipe_ids' => $ids])]]]]];
+        config(['services.openai.key' => 'test-not-a-secret']);
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($match([0, 1]))->push($this->apiResponse($bad))->push($this->apiResponse($good))->push($match([0]))]);
+        $plan = $this->plan(['occasion' => 'christmas', 'start_date' => '2026-12-25', 'diets' => ['vegan', 'gluten_free'], 'allergens' => ['milk', 'eggs', 'nuts']]);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($good['title'], $plan->meals->first()->snapshot['dessert']['title']);
+        $this->assertFalse(Recipe::where('title', $bad['title'])->exists());
+        Http::assertSentCount(4);
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+
+            return isset($input['validation_feedback']) && $input['celebration_dessert'] === true
+                && $input['allow_treat_dessert'] === true
+                && $input['diets'] === ['vegan', 'gluten_free']
+                && $input['excluded_allergens'] === ['milk', 'eggs', 'nuts']
+                && in_array('celebration_dessert', $input['validation_feedback']['rejections'][0]['reason_codes'], true);
+        });
+    }
+
+    public function test_celebration_desserts_keep_diversity_without_the_everyday_treat_quota(): void
+    {
+        $rules = app(RecipeCriteria::class);
+        $dessert = new PlanningRecipe(['title' => 'Bûche aux clémentines', 'course_type' => 'dessert', 'dessert_profile' => 'treat']);
+        $this->assertFalse($rules->allowedByWeek($dessert, ['treat' => 2], 7));
+        $this->assertTrue($rules->allowedByWeek($dessert, ['treat' => 2], 7, ['occasion' => 'christmas', 'variety' => 'varied']));
+        $this->assertFalse($rules->allowedByWeek($dessert, ['treat' => 2, 'recipe:buche aux clementines' => 1], 7, ['occasion' => 'christmas', 'variety' => 'varied']));
+    }
+
+    public function test_replacing_a_dessert_compares_it_to_both_retained_courses(): void
+    {
+        $this->recipe('starter', ['title' => 'Velouté de panais et poire', 'main_ingredient' => 'Panais'], ['Panais', 'Poire']);
+        $this->recipe('main');
+        $this->recipe('dessert');
+        $plan = $this->plan();
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $before = $plan->meals->first()->snapshot;
+        config(['services.openai.key' => 'test-not-a-secret']);
+        $bad = $this->generatedDessert('Poire', 'Poires rôties qui répètent l’entrée');
+        $good = $this->generatedDessert('Clémentine', 'Clémentines pour terminer le repas');
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($this->apiResponse($bad))->push($this->apiResponse($good))]);
+        $plan->update(['status' => 'queued']);
+        (new GenerateMealPlan($plan->id, $plan->meals->first()->id, 'dessert'))->handle(app(HybridMenuPlanner::class));
+        $this->assertSame('ready', $plan->fresh()->status, $plan->fresh()->error_message ?? '');
+        $after = $plan->fresh()->meals->first()->snapshot;
+        $this->assertSame($before['starter'], $after['starter']);
+        $this->assertSame($before['main'], $after['main']);
+        $this->assertSame($good['title'], $after['dessert']['title']);
+        Http::assertSentCount(2);
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+
+            return isset($input['validation_feedback'])
+                && in_array('same_meal_ingredients', $input['validation_feedback']['rejections'][0]['reason_codes'], true)
+                && in_array('poire', $input['existing_courses']['starter']['distinctive_ingredients'], true);
+        });
+    }
+
+    public function test_an_autumn_classic_with_a_real_vegetable_side_is_preferred_to_a_faster_plain_main(): void
+    {
+        $this->recipe('starter');
+        $this->recipe('dessert');
+        $this->recipe('main', ['title' => 'Lentilles et riz aux poireaux']);
+        $tartiflette = $this->recipe('main', ['title' => 'Tartiflette et salade verte', 'main_ingredient' => 'Pomme de terre', 'protein_source' => 'red_meat', 'vegetarian' => false, 'total_minutes' => 50, 'accompaniment' => 'Salade verte'], ['Pomme de terre', 'Lardons', 'Reblochon', 'Salade verte']);
+        $plan = $this->plan();
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($tartiflette->id, $plan->meals->first()->main_recipe_id);
+        $this->assertSame('Salade verte', $plan->meals->first()->snapshot['main']['accompaniment']);
+        Http::assertNothingSent();
+    }
+
+    private function winterMainCatalogue(): void
+    {
+        foreach ([['Lentilles', 'legumes', 'Poireau'], ['Poulet', 'poultry', 'Brocoli'], ['Saumon', 'fish', 'Potimarron'], ['Œufs', 'eggs', 'Panais'], ['Pois chiches', 'legumes', 'Navet'], ['Tofu', 'plant', 'Chou-fleur'], ['Dinde', 'poultry', 'Mâche']] as [$protein, $source, $vegetable]) {
+            $this->recipe('main', ['title' => 'Plat '.$protein, 'main_ingredient' => $protein, 'protein_source' => $source, 'vegetarian' => in_array($source, ['eggs', 'legumes', 'plant'])], [$protein, 'Riz', $vegetable]);
+        }
+    }
+
+    public function test_a_winter_week_adds_a_gratin_and_a_stew_when_the_catalogue_only_has_plain_mains(): void
+    {
+        $this->winterMainCatalogue();
+        $gratin = [...$this->generatedDessert('Pois chiches', 'Gratin de pois chiches, épinards et riz'), 'course_type' => 'main', 'food_groups' => ['vegetables', 'starch', 'protein'], 'protein_source' => 'legumes', 'dessert_profile' => null, 'total_minutes' => 40, 'ingredients' => [['name' => 'Pois chiches', 'quantity' => 200, 'unit' => 'g'], ['name' => 'Épinards', 'quantity' => 200, 'unit' => 'g'], ['name' => 'Riz', 'quantity' => 150, 'unit' => 'g']]];
+        $stew = [...$gratin, 'title' => 'Blanquette de poulet aux champignons et riz', 'main_ingredient' => 'Poulet', 'protein_source' => 'poultry', 'vegetarian' => false, 'total_minutes' => 55, 'ingredients' => [['name' => 'Poulet', 'quantity' => 200, 'unit' => 'g'], ['name' => 'Champignons', 'quantity' => 200, 'unit' => 'g'], ['name' => 'Riz', 'quantity' => 150, 'unit' => 'g']]];
+        $plain = [...$gratin, 'title' => 'Pois chiches, épinards et riz'];
+        config(['services.openai.key' => 'test-not-a-secret']);
+        Http::fake(['api.openai.com/*' => Http::sequence()->push($this->apiResponse($plain))->push($this->apiResponse($gratin))->push($this->apiResponse($stew))]);
+        $plan = $this->plan(['courses' => ['main'], 'days' => 7]);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertCount(7, $plan->meals);
+        $titles = $plan->meals->pluck('snapshot.main.title')->all();
+        $this->assertContains($gratin['title'], $titles);
+        $this->assertContains($stew['title'], $titles);
+        $this->assertCount(7, array_unique($titles));
+        $this->assertFalse(Recipe::where('title', $plain['title'])->exists());
+        Http::assertSentCount(3);
+        Http::assertSent(fn ($request) => json_decode($request['input'], true)['requested_dish_style'] === 'gratin');
+        Http::assertSent(fn ($request) => json_decode($request['input'], true)['requested_dish_style'] === 'stew');
+        Http::assertSent(function ($request) {
+            $input = json_decode($request['input'], true);
+
+            return isset($input['validation_feedback'])
+                && in_array('seasonal_dish_style', $input['validation_feedback']['rejections'][0]['reason_codes'], true);
+        });
+    }
+
+    public function test_quick_winter_slots_do_not_force_long_gratins_or_stews(): void
+    {
+        $this->winterMainCatalogue();
+        config(['services.openai.key' => 'test-not-a-secret']);
+        $plan = $this->plan(['courses' => ['main'], 'days' => 7, 'quick_minutes' => 15, 'quick_slots' => array_map(fn ($day) => $day.':lunch', range(0, 6))]);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertCount(7, $plan->meals);
+        $this->assertLessThanOrEqual(15, $plan->meals->max('total_minutes'));
+        Http::assertNothingSent();
+    }
+
+    public function test_winter_classics_never_override_pork_or_milk_exclusions(): void
+    {
+        $this->recipe('main', ['title' => 'Tartiflette et salade verte', 'protein_source' => 'red_meat', 'vegetarian' => false, 'main_ingredient' => 'Pomme de terre'], ['Pomme de terre', 'Lardons', 'Reblochon', 'Salade verte']);
+        $this->recipe('main', ['title' => 'Lentilles, riz et poireau']);
+        $gratin = $this->recipe('main', ['title' => 'Gratin de lentilles, riz et potimarron sans lait', 'total_minutes' => 40], ['Lentilles', 'Riz', 'Potimarron']);
+        $plan = $this->plan(['courses' => ['main'], 'diets' => ['no_pork'], 'allergens' => ['milk']]);
+        $this->assertSame('ready', $plan->status, $plan->error_message ?? '');
+        $this->assertSame($gratin->id, $plan->meals->first()->main_recipe_id);
         Http::assertNothingSent();
     }
 }

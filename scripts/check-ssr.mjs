@@ -136,3 +136,41 @@ for (const [component, props] of Object.entries(fixtures)) {
     }
     console.log(`SSR actif : ${component} OK`);
 }
+
+for (const [occasion, label, marker] of [
+    ['christmas', 'Noël', 'Votre menu · Noël'],
+    ['everyday', 'Repas du quotidien', 'Un jour, de bonnes idées.'],
+]) {
+    const response = await fetch('http://127.0.0.1:13714/render', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+            component: 'menus/show',
+            url: '/menus/1',
+            version: null,
+            props: {
+                auth: { user },
+                siteUrl: 'http://localhost',
+                errors: {},
+                ...fixtures['menus/show'],
+                plan: {
+                    ...fixtures['menus/show'].plan,
+                    days: 1,
+                    criteria: { courses: ['main'], occasion },
+                },
+                occasionLabel: label,
+            },
+        }),
+        signal: AbortSignal.timeout(10000),
+    });
+    const rendered = await response.json();
+    if (
+        !response.ok ||
+        typeof rendered.body !== 'string' ||
+        !rendered.body.includes(marker) ||
+        rendered.body.includes('Sept jours, de bonnes idées.')
+    ) {
+        throw new Error(`Titre du menu d’un jour incorrect pour ${occasion}.`);
+    }
+    console.log(`SSR actif : menu d’un jour ${occasion} OK`);
+}

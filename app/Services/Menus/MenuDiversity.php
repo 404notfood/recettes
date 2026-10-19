@@ -50,6 +50,8 @@ class MenuDiversity
             'banane' => 'banane', 'kiwi' => 'kiwi', 'orange' => 'orange',
             'clémentine' => 'clementine', 'fraise' => 'fraise', 'pêche' => 'peche',
             'abricot' => 'abricot', 'prune' => 'prune', 'raisin' => 'raisin',
+            'noisette' => 'noisette', 'amande' => 'amande', 'pistache' => 'pistache',
+            'noix' => 'noix', 'châtaigne' => 'chataigne|marron',
         ] as $name => $pattern) {
             if (preg_match('/\b(?:'.$pattern.')[sx]?\b/u', $text)) {
                 $ingredients[] = $name;
@@ -104,14 +106,25 @@ class MenuDiversity
         return true;
     }
 
-    /** @param array<string,PlanningRecipe> $recipes */
-    public function compatible(array $recipes): bool
+    /** @param array<string,PlanningRecipe> $recipes
+     * @param  array<string,PlanningRecipe>  $fixed  Courses retained during a replacement.
+     */
+    public function compatible(array $recipes, array $fixed = []): bool
     {
-        if (! isset($recipes['starter'], $recipes['main'])) {
-            return true;
+        $courses = array_keys($recipes);
+        foreach ($courses as $index => $course) {
+            foreach (array_slice($courses, $index + 1) as $other) {
+                // Do not invalidate two recipes the user chose to keep unchanged.
+                if (isset($fixed[$course], $fixed[$other])) {
+                    continue;
+                }
+                if (array_intersect($this->profile($recipes[$course])['ingredients'], $this->profile($recipes[$other])['ingredients'])) {
+                    return false;
+                }
+            }
         }
 
-        return ! array_intersect($this->profile($recipes['starter'])['ingredients'], $this->profile($recipes['main'])['ingredients']);
+        return true;
     }
 
     private function normalize(string $value): string

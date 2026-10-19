@@ -15,7 +15,7 @@ class HybridMenuPlanner
 {
     private const COURSES = ['starter', 'main', 'dessert'];
 
-    public function __construct(private OpenAiRecipeService $ai, private RecipeCriteria $rules, private MenuDiversity $diversity) {}
+    public function __construct(private OpenAiRecipeService $ai, private RecipeCriteria $rules, private MenuDiversity $diversity, private SeasonalCuisine $cuisine = new SeasonalCuisine) {}
 
     public function generate(MealPlan $plan, ?int $replaceMealId = null, ?string $replaceCourse = null): void
     {
@@ -89,6 +89,19 @@ class HybridMenuPlanner
                     }
                 }
                 $selected = $this->select($eligible, $criteria, $limit, $usage, $previous, $fixed, $banned, $counts, $weekMeals, $recent, $date);
+                $requestedStyle = null;
+                $styleNeeds = $this->cuisine->weeklyNeeds($criteria, $date, $counts, $weekMeals);
+                if ($styleNeeds && ! isset($fixed['main']) && $this->ai->configured()
+                    && (! isset($selected['main']) || ! in_array($this->cuisine->style($selected['main']), $styleNeeds, true))) {
+                    $available = $limit - array_sum(array_map(fn ($recipe) => $recipe->total_minutes, array_diff_key($selected, ['main' => true])));
+                    foreach ($styleNeeds as $style) {
+                        if ($available >= $this->cuisine->minimumMinutes($style)) {
+                            $requestedStyle = $style;
+                            unset($selected['main']);
+                            break;
+                        }
+                    }
+                }
                 $missing = array_values(array_diff($courses, array_keys($selected)));
                 if ($missing) {
                     $remaining = $limit - array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $selected));
@@ -101,11 +114,15 @@ class HybridMenuPlanner
                         'preferences' => $criteria['preferences'], 'date' => $date, 'meal' => $type,
                         'courses' => $courses, 'occasion' => $criteria['occasion'] ?? 'everyday',
                         'occasion_guidance' => MenuOptions::guidance($criteria),
+                        'celebration_dessert' => MenuOptions::celebration($criteria) && in_array('dessert', $courses, true),
                         'child_age' => $criteria['child_age'] ?? null,
                         'diets' => $criteria['diets'] ?? [], 'excluded_allergens' => $criteria['allergens'] ?? [],
                         'seasonal' => $criteria['seasonal'] ?? false,
                         'seasonal_produce' => ($criteria['seasonal'] ?? false) ? app(SeasonalProduce::class)->suggestions($date) : [],
                         'excluded_fresh_produce' => ($criteria['seasonal'] ?? false) ? app(SeasonalProduce::class)->excludedFreshProduce($date) : [],
+                        'seasonal_cuisine' => ($criteria['seasonal'] ?? false) ? $this->cuisine->guidance($date) : '',
+                        'preferred_dish_styles' => ($criteria['seasonal'] ?? false) ? $this->cuisine->preferredStyles($date) : [],
+                        'weekly_dish_style_needs' => $styleNeeds, 'requested_dish_style' => $requestedStyle,
                         'variety' => $criteria['variety'] ?? 'flexible',
                         'weekly_protein_needs' => $this->rules->weeklyNeeds($counts, $weekMeals, $criteria),
                         'recent_meal' => $previous,
@@ -117,7 +134,7 @@ class HybridMenuPlanner
                         'allowed_protein_sources' => array_values(array_filter(RecipeCriteria::PROTEINS, fn ($source) => $this->rules->allowedByWeek(new Recipe(['course_type' => 'main', 'protein_source' => $source]), $counts, $weekMeals, $criteria)
                             && (! $criteria['vegetarian'] || in_array($source, ['eggs', 'legumes', 'plant', 'dairy'], true)))),
                         'allow_treat_dessert' => $this->rules->allowedByWeek(new Recipe(['course_type' => 'dessert', 'dessert_profile' => 'treat']), $counts, $weekMeals, $criteria),
-                        'existing_courses' => array_map(fn ($recipe) => ['title' => $recipe->title, 'main_ingredient' => $recipe->main_ingredient], $selected),
+                        'existing_courses' => array_map(fn ($recipe) => ['title' => $recipe->title, 'main_ingredient' => $recipe->main_ingredient, 'distinctive_ingredients' => $this->diversity->profile($recipe)['ingredients']], $selected),
                         'avoid_titles' => array_values(array_unique([...array_keys($usage), ...$banned])),
                     ];
                     if (in_array('main', $missing, true) && (($criteria['variety'] ?? 'flexible') === 'varied' || ! in_array('starter', $courses, true))) {
@@ -146,6 +163,9 @@ class HybridMenuPlanner
                             $recipe->setRelation('ingredients', collect($ingredients)->map(fn ($ingredient) => new Ingredient($ingredient)));
                             $fingerprint = $this->rules->fingerprint($recipe);
                             $reasons = $this->rules->violations($recipe, $criteria, $date);
+                            if ($recipe->course_type === 'main' && $requestedStyle !== null && $this->cuisine->style($recipe) !== $requestedStyle) {
+                                $reasons[] = 'seasonal_dish_style';
+                            }
                             $eligibilityFailure = $eligibilityFailure || $reasons !== [];
                             if (! $this->rules->allowedByWeek($recipe, $counts, $weekMeals, $criteria)) {
                                 $reasons[] = 'weekly_rotation';
@@ -168,8 +188,8 @@ class HybridMenuPlanner
                         if (count($proposed) !== count($courses) || ! $this->rules->balanced($proposed, $criteria)) {
                             $rejections[] = ['course' => 'meal', 'reason_codes' => ['meal_balance']];
                         }
-                        if (! isset($fixed['starter'], $fixed['main']) && ! $this->diversity->compatible($proposed)) {
-                            $rejections[] = ['course' => 'meal', 'reason_codes' => ['same_meal_vegetables']];
+                        if (! $this->diversity->compatible($proposed, $fixed)) {
+                            $rejections[] = ['course' => 'meal', 'reason_codes' => ['same_meal_ingredients']];
                         }
                         if (array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $proposed)) > $limit) {
                             $rejections[] = ['course' => 'meal', 'reason_codes' => ['meal_time']];
@@ -204,7 +224,7 @@ class HybridMenuPlanner
                     }
                 }
                 if (count($selected) !== count($courses) || ! $this->rules->balanced($selected, $criteria)
-                    || (! isset($fixed['starter'], $fixed['main']) && ! $this->diversity->compatible($selected))
+                    || ! $this->diversity->compatible($selected, $fixed)
                     || array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $selected)) > $limit) {
                     throw new PlanningException('Impossible de composer un repas complet avec légumes, féculents et protéines dans le temps demandé.', ['operation' => 'validate_meal', 'stage' => 'composition', 'day_offset' => $offset, 'meal_type' => $type]);
                 }
@@ -351,6 +371,7 @@ class HybridMenuPlanner
     {
         $courses = MenuOptions::courses($criteria);
         $seasonalPenalties = $catalogue->mapWithKeys(fn ($recipe) => [spl_object_id($recipe) => $this->rules->seasonalPenalty($recipe, $criteria, $date)])->all();
+        $styleBonuses = $catalogue->mapWithKeys(fn ($recipe) => [spl_object_id($recipe) => $this->cuisine->bonus($recipe, $criteria, $date ?? $criteria['start_date'], $counts)])->all();
         $pools = [];
         foreach (self::COURSES as $course) {
             if (! in_array($course, $courses, true)) {
@@ -372,7 +393,7 @@ class HybridMenuPlanner
                 && ($course !== 'main' || $this->diversity->allowedByWeek($this->diversity->profile($recipe), $counts, $weekMeals))
                 && $this->diversity->allowed($course, $this->diversity->profile($recipe), $recent)
                 && ! in_array($this->rules->fingerprint($recipe), $banned, true))
-                ->sortBy(fn ($recipe) => ($seasonalPenalties[spl_object_id($recipe)] ?? 0) + ($usage[$this->rules->fingerprint($recipe)] ?? 0) * 10000 + ($counts['family:'.$this->rules->family($recipe)] ?? 0) * 1000 + $recipe->total_minutes)
+                ->sortBy(fn ($recipe) => ($seasonalPenalties[spl_object_id($recipe)] ?? 0) - ($styleBonuses[spl_object_id($recipe)] ?? 0) + ($usage[$this->rules->fingerprint($recipe)] ?? 0) * 10000 + ($counts['family:'.$this->rules->family($recipe)] ?? 0) * 1000 + $recipe->total_minutes)
                 ->take(20)->values()->all();
             $pools[$course][] = null;
         }
@@ -384,7 +405,7 @@ class HybridMenuPlanner
                     $recipes = array_filter(compact('starter', 'main', 'dessert'));
                     $minutes = array_sum(array_map(fn ($recipe) => $recipe->total_minutes, $recipes));
                     if ($minutes + (count($courses) - count($recipes)) > $limit || ! $this->rules->balanced($recipes, $criteria)
-                        || (! isset($fixed['starter'], $fixed['main']) && ! $this->diversity->compatible($recipes))) {
+                        || ! $this->diversity->compatible($recipes, $fixed)) {
                         continue;
                     }
                     $score = count($recipes) * 100000 - $minutes;
@@ -397,12 +418,13 @@ class HybridMenuPlanner
                         }
                     }
                     if ($dessert && $dessert->dessert_profile === 'treat') {
-                        $score -= 250;
+                        $score += MenuOptions::celebration($criteria) ? 250 : -250;
                     }
                     $dominants = [];
                     foreach ($recipes as $course => $recipe) {
                         $key = $this->rules->fingerprint($recipe);
                         $score -= $seasonalPenalties[spl_object_id($recipe)] ?? 0;
+                        $score += $styleBonuses[spl_object_id($recipe)] ?? 0;
                         $score -= ($usage[$key] ?? 0) * 1000;
                         if (($previous[$course]['title'] ?? null) === $recipe->title) {
                             $score -= 3000;
@@ -472,6 +494,10 @@ class HybridMenuPlanner
         $protein = $snapshot['main']['protein_source'] ?? null;
         if (isset($snapshot['main']['title'])) {
             $main = new Recipe(['title' => $snapshot['main']['title']]);
+            $style = $this->cuisine->style(new Recipe(['title' => $snapshot['main']['title'], 'course_type' => 'main']));
+            if ($style !== null) {
+                $counts['style:'.$style] = ($counts['style:'.$style] ?? 0) + 1;
+            }
             $recipeKey = 'recipe:'.$this->rules->fingerprint($main);
             $counts[$recipeKey] = ($counts[$recipeKey] ?? 0) + 1;
             $familyKey = 'family:'.$this->rules->family($main);
